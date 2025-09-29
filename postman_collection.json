@@ -1,0 +1,143 @@
+{
+	"info": {
+		"_postman_id": "view-service-collection",
+		"name": "View API",
+		"description": "API collection for the View Service - handles user collection views with enriched game data",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "User Collections",
+			"item": [
+				{
+					"name": "Get User Collections (Success)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "user123",
+								"type": "text",
+								"description": "User ID header (required)"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/views/collections",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"views",
+								"collections"
+							]
+						},
+						"description": "Retrieves the user's game collection with enriched game details from the game discovery service."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Collections (Missing Header)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/views/collections",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"views",
+								"collections"
+							]
+						},
+						"description": "Test case showing 401 unauthorized when X-User-ID header is missing."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Collections (Different User)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-User-ID",
+								"value": "user456",
+								"type": "text",
+								"description": "Different user ID"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/views/collections",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"views",
+								"collections"
+							]
+						},
+						"description": "Retrieve collections for a different user."
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints for managing and viewing user collections"
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/up",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"up"
+							]
+						},
+						"description": "Health check endpoint to verify the service is running."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000",
+			"type": "string"
+		}
+	]
+}

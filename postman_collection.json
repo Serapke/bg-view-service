@@ -10,13 +10,13 @@
 			"name": "User Collections",
 			"item": [
 				{
-					"name": "Get User Collections (Success)",
+					"name": "Get User Collections",
 					"request": {
 						"method": "GET",
 						"header": [
 							{
 								"key": "X-User-ID",
-								"value": "user123",
+								"value": "{{user_id}}",
 								"type": "text",
 								"description": "User ID header (required)"
 							}
@@ -34,55 +34,6 @@
 							]
 						},
 						"description": "Retrieves the user's game collection with enriched game details from the game discovery service."
-					},
-					"response": []
-				},
-				{
-					"name": "Get User Collections (Missing Header)",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{base_url}}/api/v1/views/collections",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"views",
-								"collections"
-							]
-						},
-						"description": "Test case showing 401 unauthorized when X-User-ID header is missing."
-					},
-					"response": []
-				},
-				{
-					"name": "Get User Collections (Different User)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "X-User-ID",
-								"value": "user456",
-								"type": "text",
-								"description": "Different user ID"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/v1/views/collections",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"views",
-								"collections"
-							]
-						},
-						"description": "Retrieve collections for a different user."
 					},
 					"response": []
 				}

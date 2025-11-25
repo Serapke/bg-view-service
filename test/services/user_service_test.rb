@@ -351,4 +351,82 @@ class UserServiceTest < ActiveSupport::TestCase
       UserService.add_game_to_collection(@user_id, game_id: game_id)
     end
   end
+
+  # Tests for remove_game_from_collection
+
+  test "remove_game_from_collection successfully removes game" do
+    game_id = 1
+
+    stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 204)
+
+    result = UserService.remove_game_from_collection(@user_id, game_id: game_id)
+
+    assert_equal true, result
+  end
+
+  test "remove_game_from_collection sends X-User-ID header" do
+    game_id = 1
+
+    stub = stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 204)
+
+    UserService.remove_game_from_collection(@user_id, game_id: game_id)
+
+    assert_requested stub
+  end
+
+  test "remove_game_from_collection raises error on 404" do
+    game_id = 999
+
+    stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 404, body: "Not Found")
+
+    error = assert_raises(StandardError) do
+      UserService.remove_game_from_collection(@user_id, game_id: game_id)
+    end
+
+    assert_match(/Failed to remove game from collection: 404/, error.message)
+  end
+
+  test "remove_game_from_collection raises error on 500" do
+    game_id = 1
+
+    stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 500, body: "Internal Server Error")
+
+    error = assert_raises(StandardError) do
+      UserService.remove_game_from_collection(@user_id, game_id: game_id)
+    end
+
+    assert_match(/Failed to remove game from collection: 500/, error.message)
+  end
+
+  test "remove_game_from_collection handles connection errors" do
+    game_id = 1
+
+    stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_timeout
+
+    assert_raises(StandardError) do
+      UserService.remove_game_from_collection(@user_id, game_id: game_id)
+    end
+  end
+
+  test "remove_game_from_collection handles connection refused" do
+    game_id = 1
+
+    stub_request(:delete, "#{@base_url}/api/v1/collections/games/#{game_id}")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_raise(Faraday::ConnectionFailed)
+
+    assert_raises(StandardError) do
+      UserService.remove_game_from_collection(@user_id, game_id: game_id)
+    end
+  end
 end

@@ -45,4 +45,21 @@ class UserService
     Rails.logger.error "UserService error: #{e.message}"
     raise e
   end
+
+  def self.remove_game_from_collection(user_id, game_id:)
+    connection = Faraday.new(url: BASE_URL)
+
+    response = connection.delete("/api/v1/collections/games/#{game_id}") do |req|
+      req.headers['X-User-ID'] = user_id
+    end
+
+    if response.success?
+      true
+    else
+      raise StandardError, "Failed to remove game from collection: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
 end

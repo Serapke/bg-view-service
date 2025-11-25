@@ -205,6 +205,54 @@ paths:
               example:
                 error: Failed to add game to collection
 
+  /api/v1/views/collections/games/{game_id}:
+    delete:
+      tags:
+        - Collections
+      summary: Remove game from user collection
+      description: Removes a board game from the user's collection
+      operationId: removeGameFromCollection
+      parameters:
+        - name: X-User-ID
+          in: header
+          required: true
+          description: User identifier
+          schema:
+            type: string
+          example: user123
+        - name: game_id
+          in: path
+          required: true
+          description: ID of the game to remove
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Game successfully removed from collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                message: Game removed from collection successfully
+        '401':
+          description: Unauthorized - X-User-ID header missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: X-User-ID header is required
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to remove game from collection
+
 components:
   schemas:
     CollectionResponse:
@@ -362,3 +410,13 @@ components:
           type: string
           description: Error message
           example: X-User-ID header is required
+
+    SuccessResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: Game removed from collection successfully

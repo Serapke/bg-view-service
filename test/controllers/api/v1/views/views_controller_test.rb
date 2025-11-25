@@ -322,4 +322,45 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     json_response = JSON.parse(response.body)
     assert_equal [], json_response["labels"]
   end
+
+  # Tests for remove_game endpoint
+
+  test "remove_game returns unauthorized when X-User-ID header is missing" do
+    delete "/api/v1/views/collections/games/1"
+
+    assert_response :unauthorized
+    assert_equal "X-User-ID header is required", JSON.parse(response.body)["error"]
+  end
+
+  test "remove_game successfully removes game from collection" do
+    user_id = "user123"
+    game_id = 1
+
+    remover = mock('remover')
+    remover.expects(:call).returns(true)
+    UserCollections::Remover.expects(:new).with(user_id, game_id: "1").returns(remover)
+
+    delete "/api/v1/views/collections/games/#{game_id}",
+           headers: { "X-User-ID" => user_id }
+
+    assert_response :ok
+
+    json_response = JSON.parse(response.body)
+    assert_equal "Game removed from collection successfully", json_response["message"]
+  end
+
+  test "remove_game handles removal errors" do
+    user_id = "user123"
+    game_id = 1
+
+    remover = mock('remover')
+    remover.expects(:call).raises(StandardError.new("Service unavailable"))
+    UserCollections::Remover.expects(:new).with(user_id, game_id: "1").returns(remover)
+
+    delete "/api/v1/views/collections/games/#{game_id}",
+           headers: { "X-User-ID" => user_id }
+
+    assert_response :internal_server_error
+    assert_equal "Failed to remove game from collection", JSON.parse(response.body)["error"]
+  end
 end

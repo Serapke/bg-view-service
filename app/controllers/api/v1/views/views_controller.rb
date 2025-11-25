@@ -40,4 +40,18 @@ class Api::V1::Views::ViewsController < ApplicationController
       render json: { error: 'Failed to add game to collection' }, status: :internal_server_error
     end
   end
+
+  def remove_game
+    user_id = request.headers['X-User-ID']
+
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      UserCollections::Remover.new(user_id, game_id: params[:game_id]).call
+      render json: { message: 'Game removed from collection successfully' }, status: :ok
+    rescue StandardError => e
+      Rails.logger.error "Error removing game from collection: #{e.message}"
+      render json: { error: 'Failed to remove game from collection' }, status: :internal_server_error
+    end
+  end
 end

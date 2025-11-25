@@ -1,0 +1,364 @@
+openapi: 3.0.3
+info:
+  title: View Service API
+  description: API for managing user board game collections and views
+  version: 1.0.0
+  contact:
+    name: Board Game Planner Team
+
+servers:
+  - url: http://localhost:3003
+    description: Development server
+
+tags:
+  - name: Collections
+    description: User board game collection management
+  - name: Health
+    description: Health check endpoints
+
+paths:
+  /up:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Returns 200 if the app boots with no exceptions, otherwise 500
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+        '500':
+          description: Application is unhealthy
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /api/v1/views/collections:
+    get:
+      tags:
+        - Collections
+      summary: Get user board game collection
+      description: Retrieves a user's board game collection with enriched game details
+      operationId: getUserCollections
+      parameters:
+        - name: X-User-ID
+          in: header
+          required: true
+          description: User identifier
+          schema:
+            type: string
+          example: user123
+      responses:
+        '200':
+          description: Successfully retrieved user collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionResponse'
+              example:
+                user_id: user123
+                total_games: 2
+                collection:
+                  - id: 1
+                    name: Catan
+                    rating: 7.5
+                    difficulty_scores: [2.5]
+                    game_categories: ["Strategy"]
+                    game_types: ["Family"]
+                    players:
+                      min: 3
+                      max: 4
+                    playing_time:
+                      min: 60
+                      max: 120
+                    notes: Great strategy game!
+                    labels:
+                      - id: 1
+                        name: Favorite
+                    modified_at: "2025-01-15T10:00:00Z"
+                  - id: 2
+                    name: Ticket to Ride
+                    rating: 8.0
+                    difficulty_scores: [1.8]
+                    game_categories: ["Route Building"]
+                    game_types: ["Family"]
+                    players:
+                      min: 2
+                      max: 5
+                    playing_time:
+                      min: 30
+                      max: 60
+                    notes: Fun with friends
+                    labels: []
+                    modified_at: "2025-01-16T11:00:00Z"
+        '401':
+          description: Unauthorized - X-User-ID header missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: X-User-ID header is required
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to fetch user collection
+
+  /api/v1/views/collections/games:
+    post:
+      tags:
+        - Collections
+      summary: Add game to user collection
+      description: Adds a board game to the user's collection with optional notes and labels
+      operationId: addGameToCollection
+      parameters:
+        - name: X-User-ID
+          in: header
+          required: true
+          description: User identifier
+          schema:
+            type: string
+          example: user123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddGameRequest'
+            examples:
+              withAllFields:
+                summary: Add game with notes and labels
+                value:
+                  game_id: 1
+                  notes: Great strategy game!
+                  label_names:
+                    - Strategy
+                    - Wishlist
+              minimal:
+                summary: Add game with minimal data
+                value:
+                  game_id: 1
+              withNotesOnly:
+                summary: Add game with notes only
+                value:
+                  game_id: 1
+                  notes: Fun party game
+      responses:
+        '201':
+          description: Game successfully added to collection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameItem'
+              example:
+                id: 1
+                name: Catan
+                rating: 7.5
+                difficulty_scores: [2.5]
+                game_categories: ["Strategy"]
+                game_types: ["Family"]
+                players:
+                  min: 3
+                  max: 4
+                playing_time:
+                  min: 60
+                  max: 120
+                notes: Great strategy game!
+                labels:
+                  - id: 1
+                    name: Strategy
+                  - id: 2
+                    name: Wishlist
+                modified_at: "2025-01-20T14:30:00Z"
+        '401':
+          description: Unauthorized - X-User-ID header missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: X-User-ID header is required
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Game with ID 999 not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to add game to collection
+
+components:
+  schemas:
+    CollectionResponse:
+      type: object
+      required:
+        - user_id
+        - collection
+        - total_games
+      properties:
+        user_id:
+          type: string
+          description: User identifier
+          example: user123
+        total_games:
+          type: integer
+          description: Total number of games in the collection
+          example: 2
+        collection:
+          type: array
+          description: Array of games in the user's collection
+          items:
+            $ref: '#/components/schemas/GameItem'
+
+    GameItem:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Game identifier
+          example: 1
+        name:
+          type: string
+          description: Game name
+          example: Catan
+        rating:
+          type: number
+          format: float
+          description: Game rating
+          nullable: true
+          example: 7.5
+        difficulty_scores:
+          type: array
+          description: Game difficulty scores
+          nullable: true
+          items:
+            type: number
+            format: float
+          example: [2.5]
+        game_categories:
+          type: array
+          description: Game categories
+          nullable: true
+          items:
+            type: string
+          example: ["Strategy", "Economic"]
+        game_types:
+          type: array
+          description: Game types
+          nullable: true
+          items:
+            type: string
+          example: ["Family", "Abstract"]
+        players:
+          type: object
+          description: Player count range
+          nullable: true
+          properties:
+            min:
+              type: integer
+              description: Minimum number of players
+              nullable: true
+              example: 3
+            max:
+              type: integer
+              description: Maximum number of players
+              nullable: true
+              example: 4
+        playing_time:
+          type: object
+          description: Playing time range in minutes
+          nullable: true
+          properties:
+            min:
+              type: integer
+              description: Minimum playing time in minutes
+              nullable: true
+              example: 60
+            max:
+              type: integer
+              description: Maximum playing time in minutes
+              nullable: true
+              example: 120
+        notes:
+          type: string
+          description: User notes about the game
+          nullable: true
+          example: Great strategy game!
+        labels:
+          type: array
+          description: User-defined labels for the game
+          items:
+            $ref: '#/components/schemas/Label'
+        modified_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp
+          nullable: true
+          example: "2025-01-15T10:00:00Z"
+
+    Label:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          description: Label identifier
+          example: 1
+        name:
+          type: string
+          description: Label name
+          example: Favorite
+
+    AddGameRequest:
+      type: object
+      required:
+        - game_id
+      properties:
+        game_id:
+          type: integer
+          description: ID of the game to add
+          example: 1
+        notes:
+          type: string
+          description: Optional notes about the game
+          nullable: true
+          example: Great strategy game!
+        label_names:
+          type: array
+          description: Optional list of label names to assign
+          items:
+            type: string
+          example: ["Strategy", "Wishlist"]
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: X-User-ID header is required

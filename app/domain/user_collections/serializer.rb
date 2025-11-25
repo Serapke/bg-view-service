@@ -21,6 +21,17 @@ module UserCollections
         id: game['id'],
         name: game['name'],
         rating: game['rating'],
+        difficulty_scores: game['difficulty_scores'],
+        game_categories: game['game_categories'],
+        game_types: game['game_types'],
+        players: {
+          min: game['min_players'],
+          max: game['max_players']
+        },
+        playing_time: {
+          min: game['min_playing_time'],
+          max: game['max_playing_time']
+        },
         notes: collection_item['notes'],
         labels: collection_item['labels'] || [],
         modified_at: collection_item['modifiedAt']

@@ -1,0 +1,24 @@
+name: view-service
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: view-service-app
+    environment:
+      - RAILS_ENV=${RAILS_ENV:-development}
+      - PORT=3003
+      - USER_SERVICE_URL=http://host.docker.internal:8080
+      - GAME_DISCOVERY_SERVICE_URL=http://host.docker.internal:3002
+    ports:
+      - "3003:3003"
+      - "1235:1234"  # Debug port for rdbg
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rdbg -O -n -c -- bin/rails server -b 0.0.0.0"
+    restart: unless-stopped
+
+volumes:
+  bundle_cache:

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       namespace :views do
         get 'collections', to: 'views#user_collections'
+        post 'collections/games', to: 'views#add_game'
       end
     end
   end

@@ -5,6 +5,150 @@ class GameDiscoveryServiceTest < ActiveSupport::TestCase
     @base_url = ENV.fetch('GAME_DISCOVERY_SERVICE_URL', 'http://localhost:3002')
   end
 
+  # Tests for get_game_by_id
+
+  test "get_game_by_id returns parsed game on success" do
+    game_id = 1
+    game_data = {
+      "id" => 1,
+      "name" => "Catan",
+      "rating" => 7.5,
+      "year_published" => 1995,
+      "min_players" => 3,
+      "max_players" => 4
+    }
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(
+        status: 200,
+        body: game_data.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    result = GameDiscoveryService.get_game_by_id(game_id)
+
+    assert_equal game_data, result
+  end
+
+  test "get_game_by_id returns nil when game not found (404)" do
+    game_id = 999
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(status: 404, body: "Not Found")
+
+    result = GameDiscoveryService.get_game_by_id(game_id)
+
+    assert_nil result
+  end
+
+  test "get_game_by_id raises error on 500" do
+    game_id = 1
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(status: 500, body: "Internal Server Error")
+
+    error = assert_raises(StandardError) do
+      GameDiscoveryService.get_game_by_id(game_id)
+    end
+
+    assert_match(/Failed to fetch game: 500/, error.message)
+  end
+
+  test "get_game_by_id raises error on 503" do
+    game_id = 1
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(status: 503, body: "Service Unavailable")
+
+    error = assert_raises(StandardError) do
+      GameDiscoveryService.get_game_by_id(game_id)
+    end
+
+    assert_match(/Failed to fetch game: 503/, error.message)
+  end
+
+  test "get_game_by_id raises error on invalid JSON" do
+    game_id = 1
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(
+        status: 200,
+        body: "not valid json",
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    error = assert_raises(StandardError) do
+      GameDiscoveryService.get_game_by_id(game_id)
+    end
+
+    assert_equal "Invalid response format from game discovery service", error.message
+  end
+
+  test "get_game_by_id handles connection timeout" do
+    game_id = 1
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_timeout
+
+    assert_raises(StandardError) do
+      GameDiscoveryService.get_game_by_id(game_id)
+    end
+  end
+
+  test "get_game_by_id handles connection refused" do
+    game_id = 1
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_raise(Faraday::ConnectionFailed)
+
+    assert_raises(StandardError) do
+      GameDiscoveryService.get_game_by_id(game_id)
+    end
+  end
+
+  test "get_game_by_id works with string game_id" do
+    game_id = "42"
+    game_data = {
+      "id" => 42,
+      "name" => "Azul",
+      "rating" => 7.8
+    }
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(
+        status: 200,
+        body: game_data.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    result = GameDiscoveryService.get_game_by_id(game_id)
+
+    assert_equal game_data, result
+  end
+
+  test "get_game_by_id handles response with minimal game data" do
+    game_id = 1
+    game_data = {
+      "id" => 1,
+      "name" => "Simple Game"
+    }
+
+    stub_request(:get, "#{@base_url}/api/v1/board_games/#{game_id}")
+      .to_return(
+        status: 200,
+        body: game_data.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    result = GameDiscoveryService.get_game_by_id(game_id)
+
+    assert_equal game_data, result
+    assert_equal 1, result["id"]
+    assert_equal "Simple Game", result["name"]
+  end
+
+  # Tests for get_games_by_ids
+
   test "get_games_by_ids returns parsed board_games array on success" do
     game_ids = [1, 2]
     games_data = {

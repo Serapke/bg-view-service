@@ -4,6 +4,10 @@ module UserCollections
       new.serialize_collection(user_id, enriched_items)
     end
 
+    def self.serialize_item(collection_item, game)
+      new.serialize_item(collection_item, game)
+    end
+
     def serialize_collection(user_id, enriched_items)
       {
         user_id: user_id,

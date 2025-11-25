@@ -34,7 +34,13 @@ module UserCollections
 
       collection_items.map do |collection_item|
         game = find_game_by_id(games, collection_item['gameId'])
-        next unless game
+
+        unless game
+          Rails.logger.warn(
+            "Game not found in discovery service - user_id: #{user_id}, game_id: #{collection_item['gameId']}"
+          )
+          next
+        end
 
         { collection_item: collection_item, game: game }
       end.compact

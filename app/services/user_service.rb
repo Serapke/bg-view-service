@@ -19,4 +19,30 @@ class UserService
     Rails.logger.error "UserService error: #{e.message}"
     raise e
   end
+
+  def self.add_game_to_collection(user_id, game_id:, notes: nil, label_names: [])
+    connection = Faraday.new(url: BASE_URL) do |conn|
+      conn.request :json
+      conn.response :json
+    end
+
+    response = connection.post("/api/v1/collections/games") do |req|
+      req.headers['X-User-ID'] = user_id
+      req.headers['Content-Type'] = 'application/json'
+      req.body = {
+        gameId: game_id,
+        notes: notes,
+        labelNames: label_names
+      }
+    end
+
+    if response.success?
+      response.body
+    else
+      raise StandardError, "Failed to add game to collection: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
 end

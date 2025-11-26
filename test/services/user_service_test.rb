@@ -429,4 +429,127 @@ class UserServiceTest < ActiveSupport::TestCase
       UserService.remove_game_from_collection(@user_id, game_id: game_id)
     end
   end
+
+  # Tests for create_review
+
+  test "create_review successfully creates review with all parameters" do
+    game_id = 1
+    rating = 8.5
+    review_text = "Amazing game with great mechanics!"
+
+    request_body = {
+      gameId: game_id,
+      rating: rating,
+      reviewText: review_text
+    }
+
+    response_body = {
+      "id" => 100,
+      "gameId" => game_id,
+      "rating" => rating,
+      "reviewText" => review_text,
+      "createdAt" => "2025-01-22T10:00:00Z"
+    }
+
+    stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(
+        headers: {
+          'X-User-ID' => @user_id,
+          'Content-Type' => 'application/json'
+        },
+        body: request_body
+      )
+      .to_return(
+        status: 201,
+        body: response_body.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    result = UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+
+    assert_equal response_body, result
+  end
+
+  test "create_review sends X-User-ID header" do
+    game_id = 1
+    rating = 9.0
+    review_text = "Excellent!"
+
+    stub = stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(
+        headers: {
+          'X-User-ID' => @user_id,
+          'Content-Type' => 'application/json'
+        }
+      )
+      .to_return(
+        status: 201,
+        body: { "id" => 100, "gameId" => game_id }.to_json,
+        headers: { 'Content-Type' => 'application/json' }
+      )
+
+    UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+
+    assert_requested stub
+  end
+
+  test "create_review raises error on 400" do
+    game_id = 1
+    rating = 15.0  # Invalid rating
+    review_text = "Test"
+
+    stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 400, body: "Bad Request")
+
+    error = assert_raises(StandardError) do
+      UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+    end
+
+    assert_match(/Failed to create review: 400/, error.message)
+  end
+
+  test "create_review raises error on 500" do
+    game_id = 1
+    rating = 8.0
+    review_text = "Great!"
+
+    stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 500, body: "Internal Server Error")
+
+    error = assert_raises(StandardError) do
+      UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+    end
+
+    assert_match(/Failed to create review: 500/, error.message)
+  end
+
+  test "create_review handles connection errors" do
+    game_id = 1
+    rating = 8.0
+    review_text = "Great!"
+
+    stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_timeout
+
+    assert_raises(StandardError) do
+      UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+    end
+  end
+
+  test "create_review handles connection refused" do
+    game_id = 1
+    rating = 8.0
+    review_text = "Great!"
+
+    stub_request(:post, "#{@base_url}/api/v1/reviews")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_raise(Faraday::ConnectionFailed)
+
+    assert_raises(StandardError) do
+      UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
+    end
+  end
 end

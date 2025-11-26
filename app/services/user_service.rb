@@ -62,4 +62,30 @@ class UserService
     Rails.logger.error "UserService error: #{e.message}"
     raise e
   end
+
+  def self.create_review(user_id, game_id:, rating:, review_text:)
+    connection = Faraday.new(url: BASE_URL) do |conn|
+      conn.request :json
+      conn.response :json
+    end
+
+    response = connection.post("/api/v1/reviews") do |req|
+      req.headers['X-User-ID'] = user_id
+      req.headers['Content-Type'] = 'application/json'
+      req.body = {
+        gameId: game_id,
+        rating: rating,
+        reviewText: review_text
+      }
+    end
+
+    if response.success?
+      response.body
+    else
+      raise StandardError, "Failed to create review: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
 end

@@ -1,4 +1,5 @@
 require "test_helper"
+require Rails.root.join("app", "domain", "game_reviews", "creator")
 
 class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
   test "user_collections returns unauthorized when X-User-ID header is missing" do
@@ -362,5 +363,95 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :internal_server_error
     assert_equal "Failed to remove game from collection", JSON.parse(response.body)["error"]
+  end
+
+  # Tests for review_game endpoint
+
+  test "review_game returns unauthorized when X-User-ID header is missing" do
+    post api_v1_views_reviews_path, params: { game_id: 1, rating: 8.5, review_text: "Great game!" }
+
+    assert_response :unauthorized
+    assert_equal "X-User-ID header is required", JSON.parse(response.body)["error"]
+  end
+
+  test "review_game successfully creates review" do
+    user_id = "user123"
+    game_id = 1
+    rating = 8.5
+    review_text = "Amazing game with great mechanics!"
+
+    game = {
+      "id" => 1,
+      "name" => "Catan",
+      "rating" => 7.5
+    }
+
+    review = {
+      "id" => 100,
+      "gameId" => 1,
+      "rating" => 8.5,
+      "reviewText" => review_text,
+      "createdAt" => "2025-01-22T10:00:00Z"
+    }
+
+    creator = mock('creator')
+    creator.expects(:call).returns({ review: review, game: game })
+    GameReviews::Creator.expects(:new)
+      .with(user_id, game_id: "1", rating: "8.5", review_text: review_text)
+      .returns(creator)
+
+    post api_v1_views_reviews_path,
+         params: { game_id: game_id, rating: rating, review_text: review_text },
+         headers: { "X-User-ID" => user_id }
+
+    assert_response :created
+
+    json_response = JSON.parse(response.body)
+
+    assert_equal 100, json_response["id"]
+    assert_equal 1, json_response["game_id"]
+    assert_equal 8.5, json_response["rating"]
+    assert_equal review_text, json_response["review_text"]
+    assert_equal "2025-01-22T10:00:00Z", json_response["created_at"]
+  end
+
+  test "review_game returns not found when game does not exist" do
+    user_id = "user123"
+    game_id = 999
+    rating = 8.0
+    review_text = "Test review"
+
+    creator = mock('creator')
+    creator.expects(:call).raises(GameReviews::GameNotFoundError.new("Game with ID 999 not found"))
+    GameReviews::Creator.expects(:new)
+      .with(user_id, game_id: "999", rating: "8.0", review_text: review_text)
+      .returns(creator)
+
+    post api_v1_views_reviews_path,
+         params: { game_id: game_id, rating: rating, review_text: review_text },
+         headers: { "X-User-ID" => user_id }
+
+    assert_response :not_found
+    assert_equal "Game with ID 999 not found", JSON.parse(response.body)["error"]
+  end
+
+  test "review_game handles creation errors" do
+    user_id = "user123"
+    game_id = 1
+    rating = 8.0
+    review_text = "Test review"
+
+    creator = mock('creator')
+    creator.expects(:call).raises(StandardError.new("Service unavailable"))
+    GameReviews::Creator.expects(:new)
+      .with(user_id, game_id: "1", rating: "8.0", review_text: review_text)
+      .returns(creator)
+
+    post api_v1_views_reviews_path,
+         params: { game_id: game_id, rating: rating, review_text: review_text },
+         headers: { "X-User-ID" => user_id }
+
+    assert_response :internal_server_error
+    assert_equal "Failed to create review", JSON.parse(response.body)["error"]
   end
 end

@@ -11,6 +11,7 @@ Rails.application.routes.draw do
         get 'collections', to: 'views#user_collections'
         post 'collections/games', to: 'views#add_game'
         delete 'collections/games/:game_id', to: 'views#remove_game'
+        post 'reviews', to: 'views#review_game'
       end
     end
   end

@@ -253,6 +253,69 @@ paths:
               example:
                 error: Failed to remove game from collection
 
+  /api/v1/views/reviews:
+    post:
+      tags:
+        - Collections
+      summary: Create a game review
+      description: Creates a review for a board game with rating and review text
+      operationId: reviewGame
+      parameters:
+        - name: X-User-ID
+          in: header
+          required: true
+          description: User identifier
+          schema:
+            type: string
+          example: user123
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReviewRequest'
+            example:
+              game_id: 1
+              rating: 8.5
+              review_text: Amazing game with great mechanics!
+      responses:
+        '201':
+          description: Review successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponse'
+              example:
+                id: 100
+                game_id: 1
+                rating: 8.5
+                review_text: Amazing game with great mechanics!
+                created_at: "2025-01-22T10:00:00Z"
+        '401':
+          description: Unauthorized - X-User-ID header missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: X-User-ID header is required
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Game with ID 999 not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Failed to create review
+
 components:
   schemas:
     CollectionResponse:
@@ -420,3 +483,58 @@ components:
           type: string
           description: Success message
           example: Game removed from collection successfully
+
+    CreateReviewRequest:
+      type: object
+      required:
+        - game_id
+        - rating
+        - review_text
+      properties:
+        game_id:
+          type: integer
+          description: ID of the game to review
+          example: 1
+        rating:
+          type: number
+          format: float
+          description: Rating for the game
+          minimum: 0
+          maximum: 10
+          example: 8.5
+        review_text:
+          type: string
+          description: Review text
+          example: Amazing game with great mechanics!
+
+    ReviewResponse:
+      type: object
+      required:
+        - id
+        - game_id
+        - rating
+        - review_text
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: Review identifier
+          example: 100
+        game_id:
+          type: integer
+          description: Game identifier
+          example: 1
+        rating:
+          type: number
+          format: float
+          description: User's rating
+          example: 8.5
+        review_text:
+          type: string
+          description: User's review text
+          example: Amazing game with great mechanics!
+        created_at:
+          type: string
+          format: date-time
+          description: Review creation timestamp
+          example: "2025-01-22T10:00:00Z"

@@ -21,6 +21,7 @@ module UserCollections
         id: game['id'],
         name: game['name'],
         rating: game['rating'],
+        rating_count: game['rating_count'],
         difficulty_score: game['difficulty_score'],
         game_categories: game['game_categories'],
         game_types: game['game_types'],

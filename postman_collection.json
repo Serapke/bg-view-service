@@ -31,9 +31,41 @@
 								"v1",
 								"views",
 								"collections"
+							],
+							"query": [
+								{
+									"key": "min_user_rating",
+									"value": "4",
+									"description": "Minimum user rating (1-5)",
+									"disabled": true
+								},
+								{
+									"key": "player_count",
+									"value": "4",
+									"description": "Filter games that support this exact number of players",
+									"disabled": true
+								},
+								{
+									"key": "max_playing_time",
+									"value": "90",
+									"description": "Filter games with max playing time under this limit (minutes)",
+									"disabled": true
+								},
+								{
+									"key": "game_types",
+									"value": "strategy,family",
+									"description": "Filter by game types (comma-separated)",
+									"disabled": true
+								},
+								{
+									"key": "min_rating",
+									"value": "7.5",
+									"description": "Filter games with BGG rating at or above this value (0-10)",
+									"disabled": true
+								}
 							]
 						},
-						"description": "Retrieves the user's game collection with enriched game details from the game discovery service."
+						"description": "Retrieves the user's game collection with enriched game details from the game discovery service. Supports filtering by user rating and game attributes."
 					},
 					"response": [
 						{

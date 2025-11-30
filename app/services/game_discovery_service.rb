@@ -20,11 +20,17 @@ class GameDiscoveryService
     raise e
   end
 
-  def self.get_games_by_ids(game_ids)
+  def self.get_games_by_ids(game_ids, filters: {})
     return [] if game_ids.empty?
 
     connection = Faraday.new(url: BASE_URL)
-    response = connection.get("/api/v1/board_games", { ids: game_ids.join(',') })
+    params = { ids: game_ids.join(',') }
+    params[:player_count] = filters[:player_count] if filters[:player_count]
+    params[:max_playing_time] = filters[:max_playing_time] if filters[:max_playing_time]
+    params[:game_types] = filters[:game_types] if filters[:game_types]
+    params[:min_rating] = filters[:min_rating] if filters[:min_rating]
+
+    response = connection.get("/api/v1/board_games", params)
 
     if response.success?
       JSON.parse(response.body).dig('board_games')

@@ -21,7 +21,7 @@ module UserCollections
         id: game['id'],
         name: game['name'],
         rating: game['rating'],
-        difficulty_scores: game['difficulty_scores'],
+        difficulty_score: game['difficulty_score'],
         game_categories: game['game_categories'],
         game_types: game['game_types'],
         players: {
@@ -34,6 +34,7 @@ module UserCollections
         },
         notes: collection_item['notes'],
         labels: collection_item['labels'] || [],
+        user_rating: collection_item['userRating'],
         modified_at: collection_item['modifiedAt']
       }
     end

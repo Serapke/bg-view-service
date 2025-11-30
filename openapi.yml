@@ -44,7 +44,7 @@ paths:
       tags:
         - Collections
       summary: Get user board game collection
-      description: Retrieves a user's board game collection with enriched game details
+      description: Retrieves a user's board game collection with enriched game details. Supports filtering by user rating and game attributes.
       operationId: getUserCollections
       parameters:
         - name: X-User-ID
@@ -54,6 +54,48 @@ paths:
           schema:
             type: string
           example: user123
+        - name: min_user_rating
+          in: query
+          required: false
+          description: Minimum user rating (1-5). Only returns games the user rated at or above this value.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+          example: 4
+        - name: player_count
+          in: query
+          required: false
+          description: Filter games that support this exact number of players
+          schema:
+            type: integer
+            minimum: 1
+          example: 4
+        - name: max_playing_time
+          in: query
+          required: false
+          description: Filter games with maximum playing time under this limit (in minutes)
+          schema:
+            type: integer
+            minimum: 1
+          example: 90
+        - name: game_types
+          in: query
+          required: false
+          description: Filter by game types (comma-separated)
+          schema:
+            type: string
+          example: "strategy,family"
+        - name: min_rating
+          in: query
+          required: false
+          description: Filter games with BGG rating at or above this value (0-10)
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 10
+          example: 7.5
       responses:
         '200':
           description: Successfully retrieved user collection

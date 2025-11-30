@@ -5,7 +5,8 @@ class Api::V1::Views::ViewsController < ApplicationController
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
 
     begin
-      enriched_items = UserCollections::Enricher.new(user_id).call
+      filters = build_collection_filters
+      enriched_items = UserCollections::Fetcher.new(user_id, filters: filters).call
       response = UserCollections::Serializer.serialize_collection(user_id, enriched_items)
       render json: response
     rescue StandardError => e
@@ -77,5 +78,17 @@ class Api::V1::Views::ViewsController < ApplicationController
       Rails.logger.error "Error creating review: #{e.message}"
       render json: { error: 'Failed to create review' }, status: :internal_server_error
     end
+  end
+
+  private
+
+  def build_collection_filters
+    filters = {}
+    filters[:min_user_rating] = params[:min_user_rating] if params[:min_user_rating].present?
+    filters[:player_count] = params[:player_count] if params[:player_count].present?
+    filters[:max_playing_time] = params[:max_playing_time] if params[:max_playing_time].present?
+    filters[:game_types] = params[:game_types] if params[:game_types].present?
+    filters[:min_rating] = params[:min_rating] if params[:min_rating].present?
+    filters
   end
 end

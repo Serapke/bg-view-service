@@ -78,13 +78,33 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def user_reviews
+    user_id = request.headers['X-User-ID']
+
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      enriched_items = UserReviews::Fetcher.new(user_id).call
+      response = UserReviews::Serializer.serialize_list(user_id, enriched_items)
+      render json: response
+    rescue StandardError => e
+      Rails.logger.error "Error fetching user reviews: #{e.message}"
+      render json: { error: 'Failed to fetch user reviews' }, status: :internal_server_error
+    end
+  end
+
   def upsert_review
     user_id = request.headers['X-User-ID']
 
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
 
     begin
-GameReviews::Updater.new(user_id, game_id: params[:game_id], rating: params[:rating]).call
+      GameReviews::Updater.new(
+        user_id,
+        game_id: params[:game_id],
+        rating: params[:rating],
+        review_text: params[:review_text]
+      ).call
       render json: { message: 'Rating updated' }, status: :ok
     rescue GameReviews::GameNotFoundError => e
       render json: { error: e.message }, status: :not_found

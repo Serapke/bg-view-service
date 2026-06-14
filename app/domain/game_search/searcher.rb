@@ -9,7 +9,8 @@ module GameSearch
     def call
       games            = GameDiscoveryService.search(name, filters: filters)
       collection_items = fetch_collection_items
-      enrich(games, collection_items)
+      user_ratings     = fetch_user_ratings
+      enrich(games, collection_items, user_ratings)
     end
 
     private
@@ -23,13 +24,17 @@ module GameSearch
       end
     end
 
-    def enrich(games, collection_items)
+    def fetch_user_ratings
+      reviews = UserService.get_user_reviews(user_id)
+      reviews.each_with_object({}) { |r, acc| acc[r['gameId']] = r['rating'] }
+    end
+
+    def enrich(games, collection_items, user_ratings)
       games.map do |game|
-        item = collection_items[game['id']]
         {
           game:          game,
-          in_collection: !item.nil?,
-          user_rating:   item&.dig('userRating')
+          in_collection: collection_items.key?(game['id']),
+          user_rating:   user_ratings[game['id']]
         }
       end
     end

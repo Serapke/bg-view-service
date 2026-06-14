@@ -1,11 +1,11 @@
 module GameSearch
   class Serializer
     def self.serialize_results(enriched_games)
-      results = enriched_games.map { |item| serialize_game(item[:game], item[:in_collection]) }
+      results = enriched_games.map { |item| serialize_game(item[:game], item[:in_collection], item[:user_rating]) }
       { board_games: results, total: results.size }
     end
 
-    def self.serialize_game(game, in_collection)
+    def self.serialize_game(game, in_collection, user_rating)
       {
         id:               game['id'],
         name:             game['name'],
@@ -18,7 +18,10 @@ module GameSearch
         max_players:      game['max_players'],
         min_playing_time: game['min_playing_time'],
         max_playing_time: game['max_playing_time'],
-        in_collection:    in_collection
+        image_url:        game['image_url'],
+        thumbnail_url:    game['thumbnail_url'],
+        in_collection:    in_collection,
+        user_rating:      user_rating
       }
     end
   end

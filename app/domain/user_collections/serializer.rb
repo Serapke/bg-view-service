@@ -25,6 +25,8 @@ module UserCollections
         difficulty_score: game['difficulty_score'],
         game_categories: game['game_categories'],
         game_types: game['game_types'],
+        image_url: game['image_url'],
+        thumbnail_url: game['thumbnail_url'],
         players: {
           min: game['min_players'],
           max: game['max_players']

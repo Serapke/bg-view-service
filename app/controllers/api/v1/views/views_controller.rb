@@ -36,6 +36,8 @@ class Api::V1::Views::ViewsController < ApplicationController
       render json: serialized_item, status: :created
     rescue UserCollections::GameNotFoundError => e
       render json: { error: e.message }, status: :not_found
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
     rescue StandardError => e
       Rails.logger.error "Error adding game to collection: #{e.message}"
       render json: { error: 'Failed to add game to collection' }, status: :internal_server_error
@@ -74,6 +76,8 @@ class Api::V1::Views::ViewsController < ApplicationController
       render json: serialized_review, status: :created
     rescue GameReviews::GameNotFoundError => e
       render json: { error: e.message }, status: :not_found
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
     rescue StandardError => e
       Rails.logger.error "Error creating review: #{e.message}"
       render json: { error: 'Failed to create review' }, status: :internal_server_error

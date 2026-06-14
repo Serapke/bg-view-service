@@ -1,6 +1,8 @@
 class UserService
   BASE_URL = ENV.fetch('USER_SERVICE_URL', 'http://localhost:8080')
 
+  class ClientError < StandardError; end
+
   def self.get_user_collection(user_id)
     connection = Faraday.new(url: BASE_URL)
     response = connection.get("/api/v1/collections") do |req|
@@ -38,8 +40,11 @@ class UserService
 
     if response.success?
       response.body
+    elsif response.status < 500
+      message = response.body.is_a?(Hash) ? response.body['error'] : nil
+      raise ClientError, message || "Failed to add game to collection"
     else
-      raise StandardError, "Failed to add game to collection: #{response.status} - #{response.reason_phrase}"
+      raise StandardError, "Failed to add game to collection: #{response.status}"
     end
   rescue StandardError => e
     Rails.logger.error "UserService error: #{e.message}"
@@ -81,8 +86,11 @@ class UserService
 
     if response.success?
       response.body
+    elsif response.status < 500
+      message = response.body.is_a?(Hash) ? response.body['error'] : nil
+      raise ClientError, message || "Failed to create review"
     else
-      raise StandardError, "Failed to create review: #{response.status} - #{response.reason_phrase}"
+      raise StandardError, "Failed to create review: #{response.status}"
     end
   rescue StandardError => e
     Rails.logger.error "UserService error: #{e.message}"

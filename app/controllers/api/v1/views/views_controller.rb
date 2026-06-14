@@ -58,6 +58,24 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def upsert_review
+    user_id = request.headers['X-User-ID']
+
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+GameReviews::Updater.new(user_id, game_id: params[:game_id], rating: params[:rating]).call
+      render json: { message: 'Rating updated' }, status: :ok
+    rescue GameReviews::GameNotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error upserting review: #{e.message}"
+      render json: { error: 'Failed to update rating' }, status: :internal_server_error
+    end
+  end
+
   def review_game
     user_id = request.headers['X-User-ID']
 

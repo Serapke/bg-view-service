@@ -33,5 +33,4 @@ module GameReviews
     end
   end
 
-  class GameNotFoundError < StandardError; end
 end

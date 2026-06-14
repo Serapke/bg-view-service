@@ -68,6 +68,47 @@ class UserService
     raise e
   end
 
+  def self.get_user_reviews(user_id)
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.get("/api/v1/reviews/me") do |req|
+      req.headers['X-User-ID'] = user_id
+    end
+
+    if response.success?
+      JSON.parse(response.body)
+    else
+      raise StandardError, "Failed to fetch user reviews: #{response.status}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
+
+  def self.update_review(user_id, review_id:, rating:, review_text: nil)
+    connection = Faraday.new(url: BASE_URL) do |conn|
+      conn.request :json
+      conn.response :json
+    end
+
+    response = connection.put("/api/v1/reviews/#{review_id}") do |req|
+      req.headers['X-User-ID'] = user_id
+      req.headers['Content-Type'] = 'application/json'
+      req.body = { rating: rating, reviewText: review_text }
+    end
+
+    if response.success?
+      response.body
+    elsif response.status < 500
+      message = response.body.is_a?(Hash) ? response.body['error'] : nil
+      raise ClientError, message || "Failed to update review"
+    else
+      raise StandardError, "Failed to update review: #{response.status}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
+
   def self.create_review(user_id, game_id:, rating:, review_text:)
     connection = Faraday.new(url: BASE_URL) do |conn|
       conn.request :json

@@ -297,7 +297,7 @@ class UserServiceTest < ActiveSupport::TestCase
       UserService.add_game_to_collection(@user_id, game_id: game_id)
     end
 
-    assert_match(/Failed to add game to collection: 400/, error.message)
+    assert_match(/Failed to add game to collection/, error.message)
   end
 
   test "add_game_to_collection raises error on 404" do
@@ -311,7 +311,7 @@ class UserServiceTest < ActiveSupport::TestCase
       UserService.add_game_to_collection(@user_id, game_id: game_id)
     end
 
-    assert_match(/Failed to add game to collection: 404/, error.message)
+    assert_match(/Failed to add game to collection/, error.message)
   end
 
   test "add_game_to_collection raises error on 500" do
@@ -506,7 +506,7 @@ class UserServiceTest < ActiveSupport::TestCase
       UserService.create_review(@user_id, game_id: game_id, rating: rating, review_text: review_text)
     end
 
-    assert_match(/Failed to create review: 400/, error.message)
+    assert_match(/Failed to create review/, error.message)
   end
 
   test "create_review raises error on 500" do

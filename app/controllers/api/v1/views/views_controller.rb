@@ -19,6 +19,22 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def trending
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      enriched_games = Trending::Fetcher.new(user_id).call
+      result         = GameSearch::Serializer.serialize_results(enriched_games)
+      render json: result
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error fetching trending games: #{e.message}"
+      render json: { error: 'Failed to fetch trending games' }, status: :internal_server_error
+    end
+  end
+
   def user_collections
     user_id = request.headers['X-User-ID']
 

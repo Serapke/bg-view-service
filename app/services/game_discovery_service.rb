@@ -42,6 +42,23 @@ class GameDiscoveryService
     raise e
   end
 
+  def self.trending
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.get("/api/v1/board_games/trending")
+
+    if response.success?
+      JSON.parse(response.body).dig('board_games') || []
+    else
+      raise StandardError, "Trending fetch failed: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue JSON::ParserError => e
+    Rails.logger.error "GameDiscoveryService JSON parsing error: #{e.message}"
+    raise StandardError, "Invalid response format from game discovery service"
+  rescue StandardError => e
+    Rails.logger.error "GameDiscoveryService error: #{e.message}"
+    raise e
+  end
+
   def self.get_games_by_ids(game_ids, filters: {})
     return [] if game_ids.empty?
 

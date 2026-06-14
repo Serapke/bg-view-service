@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     namespace :v1 do
       namespace :views do
         get 'search', to: 'views#search_games'
+        get 'trending', to: 'views#trending'
         get 'collections', to: 'views#user_collections'
         post 'collections/games', to: 'views#add_game'
         delete 'collections/games/:game_id', to: 'views#remove_game'

@@ -23,10 +23,10 @@ class GameDiscoveryService
   def self.search(name, filters: {})
     connection = Faraday.new(url: BASE_URL)
     params = { name: name }
-    params[:player_count]     = filters[:player_count]     if filters[:player_count]
-    params[:max_playing_time] = filters[:max_playing_time] if filters[:max_playing_time]
-    params[:game_types]       = filters[:game_types]       if filters[:game_types]
-    params[:min_rating]       = filters[:min_rating]       if filters[:min_rating]
+    params[:player_count]     = filters[:player_count]                        if filters[:player_count]
+    params[:max_playing_time] = filters[:max_playing_time]                    if filters[:max_playing_time]
+    params[:game_types]       = Array(filters[:game_types]).join(',')         if filters[:game_types]
+    params[:min_rating]       = filters[:min_rating]                          if filters[:min_rating]
 
     response = connection.get("/api/v1/board_games/search", params)
     if response.success?
@@ -49,7 +49,7 @@ class GameDiscoveryService
     params = { ids: game_ids.join(',') }
     params[:player_count] = filters[:player_count] if filters[:player_count]
     params[:max_playing_time] = filters[:max_playing_time] if filters[:max_playing_time]
-    params[:game_types] = filters[:game_types] if filters[:game_types]
+    params[:game_types] = Array(filters[:game_types]).join(',') if filters[:game_types]
     params[:min_rating] = filters[:min_rating] if filters[:min_rating]
 
     response = connection.get("/api/v1/board_games", params)

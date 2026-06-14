@@ -1,4 +1,24 @@
 class Api::V1::Views::ViewsController < ApplicationController
+  def search_games
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    name = params[:name]
+    return render json: { error: 'name parameter is required' }, status: :bad_request if name.blank?
+
+    begin
+      filters        = build_search_filters
+      enriched_games = GameSearch::Searcher.new(user_id, name: name, filters: filters).call
+      result         = GameSearch::Serializer.serialize_results(enriched_games)
+      render json: result
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error searching games: #{e.message}"
+      render json: { error: 'Failed to search games' }, status: :internal_server_error
+    end
+  end
+
   def user_collections
     user_id = request.headers['X-User-ID']
 
@@ -103,6 +123,15 @@ GameReviews::Updater.new(user_id, game_id: params[:game_id], rating: params[:rat
   end
 
   private
+
+  def build_search_filters
+    filters = {}
+    filters[:player_count]     = params[:player_count]     if params[:player_count].present?
+    filters[:max_playing_time] = params[:max_playing_time] if params[:max_playing_time].present?
+    filters[:game_types]       = params[:game_types]       if params[:game_types].present?
+    filters[:min_rating]       = params[:min_rating]       if params[:min_rating].present?
+    filters
+  end
 
   def build_collection_filters
     filters = {}

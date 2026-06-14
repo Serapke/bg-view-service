@@ -20,6 +20,28 @@ class GameDiscoveryService
     raise e
   end
 
+  def self.search(name, filters: {})
+    connection = Faraday.new(url: BASE_URL)
+    params = { name: name }
+    params[:player_count]     = filters[:player_count]     if filters[:player_count]
+    params[:max_playing_time] = filters[:max_playing_time] if filters[:max_playing_time]
+    params[:game_types]       = filters[:game_types]       if filters[:game_types]
+    params[:min_rating]       = filters[:min_rating]       if filters[:min_rating]
+
+    response = connection.get("/api/v1/board_games/search", params)
+    if response.success?
+      JSON.parse(response.body).dig('board_games') || []
+    else
+      raise StandardError, "Search failed: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue JSON::ParserError => e
+    Rails.logger.error "GameDiscoveryService JSON parsing error: #{e.message}"
+    raise StandardError, "Invalid response format from game discovery service"
+  rescue StandardError => e
+    Rails.logger.error "GameDiscoveryService error: #{e.message}"
+    raise e
+  end
+
   def self.get_games_by_ids(game_ids, filters: {})
     return [] if game_ids.empty?
 

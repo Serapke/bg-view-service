@@ -14,7 +14,8 @@ module GameDetail
       {
         game: game,
         in_collection: !collection_item.nil?,
-        user_rating: collection_item&.dig('userRating')
+        user_rating: collection_item&.dig('userRating'),
+        recommendations: fetch_recommendations
       }
     end
 
@@ -26,6 +27,16 @@ module GameDetail
       collection = UserService.get_user_collection(user_id)
       items = collection['games'] || []
       items.find { |item| item['gameId'] == game_id }
+    end
+
+    def fetch_recommendations
+      ids = RecommenderService.get_recommended_game_ids(game_id)
+      return [] if ids.empty?
+
+      GameDiscoveryService.get_games_by_ids(ids) || []
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch recommendations for game #{game_id}: #{e.message}"
+      []
     end
   end
 end

@@ -490,6 +490,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     UserService.stubs(:get_user_collection).returns(
       "games" => [{ "gameId" => 7, "userRating" => 9 }]
     )
+    RecommenderService.stubs(:get_recommended_game_ids).returns([])
 
     get "/api/v1/views/games/7", headers: { "X-User-ID" => user_id }
 
@@ -501,6 +502,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 9, body["user_rating"]
     assert_equal [], body["expansions"]
     assert_equal [], body["base_games"]
+    assert_equal [], body["recommendations"]
   end
 
   test "game_detail returns in_collection false and nil user_rating when not in collection" do
@@ -510,6 +512,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
       "reimplementations" => [], "integrated_games" => []
     )
     UserService.stubs(:get_user_collection).returns("games" => [])
+    RecommenderService.stubs(:get_recommended_game_ids).returns([])
 
     get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }
 
@@ -517,5 +520,44 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal false, body["in_collection"]
     assert_nil body["user_rating"]
+  end
+
+  test "game_detail includes hydrated recommendations from recommender service" do
+    game = {
+      "id" => 7, "name" => "Brass", "expansions" => [], "base_games" => [],
+      "contained_games" => [], "containers" => [], "reimplemented_games" => [],
+      "reimplementations" => [], "integrated_games" => []
+    }
+    recommended = [
+      { "id" => 11, "name" => "Concordia" },
+      { "id" => 12, "name" => "Terraforming Mars" }
+    ]
+    GameDiscoveryService.stubs(:get_game_by_id).returns(game)
+    UserService.stubs(:get_user_collection).returns("games" => [])
+    RecommenderService.stubs(:get_recommended_game_ids).returns([11, 12])
+    GameDiscoveryService.stubs(:get_games_by_ids).with([11, 12]).returns(recommended)
+
+    get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal recommended, body["recommendations"]
+  end
+
+  test "game_detail returns empty recommendations when recommender service errors" do
+    game = {
+      "id" => 7, "name" => "Brass", "expansions" => [], "base_games" => [],
+      "contained_games" => [], "containers" => [], "reimplemented_games" => [],
+      "reimplementations" => [], "integrated_games" => []
+    }
+    GameDiscoveryService.stubs(:get_game_by_id).returns(game)
+    UserService.stubs(:get_user_collection).returns("games" => [])
+    RecommenderService.stubs(:get_recommended_game_ids).raises(StandardError, "boom")
+
+    get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal [], body["recommendations"]
   end
 end

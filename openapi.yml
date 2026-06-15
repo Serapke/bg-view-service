@@ -322,7 +322,7 @@ paths:
             application/json:
               schema:
                 type: object
-                description: Discovery service BoardGameDetailed payload with `in_collection` and `user_rating` added
+                description: Discovery service BoardGameDetailed payload with `in_collection`, `user_rating`, and `recommendations` (array of BoardGameSummary objects from the recommender service) added
         '401':
           description: Missing X-User-ID
         '404':

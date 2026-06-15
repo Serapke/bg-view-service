@@ -11,6 +11,7 @@ services:
       - PORT=3003
       - USER_SERVICE_URL=http://host.docker.internal:8080
       - GAME_DISCOVERY_SERVICE_URL=http://host.docker.internal:3002
+      - RECOMMENDER_SERVICE_URL=http://host.docker.internal:3004
     ports:
       - "3003:3003"
       - "1235:1234"  # Debug port for rdbg

@@ -5,6 +5,11 @@ module GameSearch
       { board_games: results, total: results.size }
     end
 
+    def self.serialize_paginated(enriched_games, page:, per_page:, total:, total_pages:)
+      results = enriched_games.map { |item| serialize_game(item[:game], item[:in_collection], item[:user_rating]) }
+      { board_games: results, page: page, per_page: per_page, total: total, total_pages: total_pages }
+    end
+
     def self.serialize_game(game, in_collection, user_rating)
       {
         id:               game['id'],

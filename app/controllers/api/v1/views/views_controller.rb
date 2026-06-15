@@ -35,6 +35,32 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def browse
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      result = Browse::Fetcher.new(
+        user_id,
+        page: params[:page],
+        per_page: params[:per_page],
+        sort: params[:sort]
+      ).call
+      render json: GameSearch::Serializer.serialize_paginated(
+        result[:enriched_games],
+        page: result[:page],
+        per_page: result[:per_page],
+        total: result[:total],
+        total_pages: result[:total_pages]
+      )
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error browsing games: #{e.message}"
+      render json: { error: 'Failed to browse games' }, status: :internal_server_error
+    end
+  end
+
   def game_detail
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?

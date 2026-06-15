@@ -564,4 +564,60 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     body = JSON.parse(response.body)
     assert_equal [], body["recommendations"]
   end
+
+  test "browse returns unauthorized when X-User-ID header is missing" do
+    get api_v1_views_browse_path
+
+    assert_response :unauthorized
+    assert_equal "X-User-ID header is required", JSON.parse(response.body)["error"]
+  end
+
+  test "browse returns paginated enriched results" do
+    user_id = "user123"
+
+    browse_response = {
+      "board_games" => [
+        { "id" => 1, "name" => "Catan",          "rating" => 7.5 },
+        { "id" => 2, "name" => "Ticket to Ride", "rating" => 8.0 }
+      ],
+      "page" => 1,
+      "per_page" => 2,
+      "total" => 5,
+      "total_pages" => 3
+    }
+
+    GameDiscoveryService.stubs(:browse).returns(browse_response)
+    UserService.stubs(:get_user_collection).returns({ "games" => [{ "gameId" => 1 }] })
+    UserService.stubs(:get_user_reviews).returns([{ "gameId" => 1, "rating" => 9 }])
+
+    get api_v1_views_browse_path, params: { page: 1, per_page: 2, sort: 'rating' },
+                                  headers: { "X-User-ID" => user_id }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+
+    assert_equal 1, body["page"]
+    assert_equal 2, body["per_page"]
+    assert_equal 5, body["total"]
+    assert_equal 3, body["total_pages"]
+    assert_equal 2, body["board_games"].size
+
+    first = body["board_games"].find { |g| g["id"] == 1 }
+    assert_equal true, first["in_collection"]
+    assert_equal 9, first["user_rating"]
+
+    second = body["board_games"].find { |g| g["id"] == 2 }
+    assert_equal false, second["in_collection"]
+    assert_nil second["user_rating"]
+  end
+
+  test "browse returns 500 on game discovery failure" do
+    user_id = "user123"
+    GameDiscoveryService.stubs(:browse).raises(StandardError, "boom")
+
+    get api_v1_views_browse_path, headers: { "X-User-ID" => user_id }
+
+    assert_response :internal_server_error
+    assert_equal "Failed to browse games", JSON.parse(response.body)["error"]
+  end
 end

@@ -295,6 +295,39 @@ paths:
               example:
                 error: Failed to remove game from collection
 
+  /api/v1/views/games/{id}:
+    get:
+      tags:
+        - Collections
+      summary: Get game detail with user context
+      description: Returns full game detail (including all relation types) enriched with whether the user has the game in their collection and their rating.
+      operationId: getGameDetail
+      parameters:
+        - name: X-User-ID
+          in: header
+          required: true
+          description: User identifier
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          description: Board game ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Game detail
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Discovery service BoardGameDetailed payload with `in_collection` and `user_rating` added
+        '401':
+          description: Missing X-User-ID
+        '404':
+          description: Game not found
+
   /api/v1/views/reviews:
     post:
       tags:

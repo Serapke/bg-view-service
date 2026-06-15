@@ -35,6 +35,23 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def game_detail
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      result = GameDetail::Fetcher.new(user_id, game_id: params[:id]).call
+      render json: GameDetail::Serializer.serialize(**result)
+    rescue GameDetail::GameNotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue UserService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error fetching game detail: #{e.message}"
+      render json: { error: 'Failed to fetch game detail' }, status: :internal_server_error
+    end
+  end
+
   def user_collections
     user_id = request.headers['X-User-ID']
 

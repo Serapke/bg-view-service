@@ -454,4 +454,68 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :internal_server_error
     assert_equal "Failed to create review", JSON.parse(response.body)["error"]
   end
+
+  test "game_detail returns unauthorized when X-User-ID header is missing" do
+    get "/api/v1/views/games/1"
+    assert_response :unauthorized
+  end
+
+  test "game_detail returns 404 when discovery service has no game" do
+    GameDiscoveryService.stubs(:get_game_by_id).returns(nil)
+
+    get "/api/v1/views/games/42", headers: { "X-User-ID" => "user1" }
+
+    assert_response :not_found
+    assert_match(/not found/i, JSON.parse(response.body)["error"])
+  end
+
+  test "game_detail returns enriched game with in_collection and user_rating" do
+    user_id = "user1"
+    game = {
+      "id" => 7,
+      "name" => "Brass: Birmingham",
+      "year_published" => 2018,
+      "game_types" => ["strategy"],
+      "game_categories" => ["Economic"],
+      "expansions" => [],
+      "base_games" => [],
+      "contained_games" => [],
+      "containers" => [],
+      "reimplemented_games" => [],
+      "reimplementations" => [],
+      "integrated_games" => []
+    }
+
+    GameDiscoveryService.stubs(:get_game_by_id).returns(game)
+    UserService.stubs(:get_user_collection).returns(
+      "games" => [{ "gameId" => 7, "userRating" => 9 }]
+    )
+
+    get "/api/v1/views/games/7", headers: { "X-User-ID" => user_id }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal 7, body["id"]
+    assert_equal "Brass: Birmingham", body["name"]
+    assert_equal true, body["in_collection"]
+    assert_equal 9, body["user_rating"]
+    assert_equal [], body["expansions"]
+    assert_equal [], body["base_games"]
+  end
+
+  test "game_detail returns in_collection false and nil user_rating when not in collection" do
+    GameDiscoveryService.stubs(:get_game_by_id).returns(
+      "id" => 7, "name" => "Brass", "expansions" => [], "base_games" => [],
+      "contained_games" => [], "containers" => [], "reimplemented_games" => [],
+      "reimplementations" => [], "integrated_games" => []
+    )
+    UserService.stubs(:get_user_collection).returns("games" => [])
+
+    get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal false, body["in_collection"]
+    assert_nil body["user_rating"]
+  end
 end

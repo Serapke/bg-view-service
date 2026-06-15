@@ -35,6 +35,20 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def recommendations
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      enriched_games = UserRecommendations::Fetcher.new(user_id).call
+      result         = GameSearch::Serializer.serialize_results(enriched_games)
+      render json: result
+    rescue StandardError => e
+      Rails.logger.error "Error fetching recommendations: #{e.message}"
+      render json: { error: 'Failed to fetch recommendations' }, status: :internal_server_error
+    end
+  end
+
   def browse
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?

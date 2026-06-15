@@ -488,8 +488,9 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
 
     GameDiscoveryService.stubs(:get_game_by_id).returns(game)
     UserService.stubs(:get_user_collection).returns(
-      "games" => [{ "gameId" => 7, "userRating" => 9 }]
+      "games" => [{ "gameId" => 7 }]
     )
+    UserService.stubs(:get_user_reviews).returns([{ "gameId" => 7, "rating" => 9 }])
     RecommenderService.stubs(:get_recommended_game_ids).returns([])
 
     get "/api/v1/views/games/7", headers: { "X-User-ID" => user_id }
@@ -512,6 +513,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
       "reimplementations" => [], "integrated_games" => []
     )
     UserService.stubs(:get_user_collection).returns("games" => [])
+    UserService.stubs(:get_user_reviews).returns([])
     RecommenderService.stubs(:get_recommended_game_ids).returns([])
 
     get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }
@@ -534,6 +536,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     ]
     GameDiscoveryService.stubs(:get_game_by_id).returns(game)
     UserService.stubs(:get_user_collection).returns("games" => [])
+    UserService.stubs(:get_user_reviews).returns([])
     RecommenderService.stubs(:get_recommended_game_ids).returns([11, 12])
     GameDiscoveryService.stubs(:get_games_by_ids).with([11, 12]).returns(recommended)
 
@@ -552,6 +555,7 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     }
     GameDiscoveryService.stubs(:get_game_by_id).returns(game)
     UserService.stubs(:get_user_collection).returns("games" => [])
+    UserService.stubs(:get_user_reviews).returns([])
     RecommenderService.stubs(:get_recommended_game_ids).raises(StandardError, "boom")
 
     get "/api/v1/views/games/7", headers: { "X-User-ID" => "u" }

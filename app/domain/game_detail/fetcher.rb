@@ -9,12 +9,10 @@ module GameDetail
       game = GameDiscoveryService.get_game_by_id(game_id)
       raise GameNotFoundError, game_id if game.nil?
 
-      collection_item = find_collection_item
-
       {
         game: game,
-        in_collection: !collection_item.nil?,
-        user_rating: collection_item&.dig('userRating'),
+        in_collection: in_collection?,
+        user_rating: fetch_user_rating,
         recommendations: fetch_recommendations
       }
     end
@@ -23,10 +21,16 @@ module GameDetail
 
     attr_reader :user_id, :game_id
 
-    def find_collection_item
+    def in_collection?
       collection = UserService.get_user_collection(user_id)
       items = collection['games'] || []
-      items.find { |item| item['gameId'] == game_id }
+      items.any? { |item| item['gameId'] == game_id }
+    end
+
+    def fetch_user_rating
+      reviews = UserService.get_user_reviews(user_id)
+      review = reviews.find { |r| r['gameId'] == game_id }
+      review&.dig('rating')
     end
 
     def fetch_recommendations

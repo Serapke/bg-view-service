@@ -215,6 +215,42 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def create_event
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    user_ids = params[:userIds] || params[:user_ids]
+    return render json: { error: 'userIds is required' }, status: :bad_request if user_ids.nil?
+    return render json: { error: 'userIds must be an array' }, status: :bad_request unless user_ids.is_a?(Array)
+
+    begin
+      event = Events::Creator.new(user_id, user_ids: user_ids, title: params[:title]).call
+      render json: Events::Serializer.serialize(event), status: :created
+    rescue EventService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error creating event: #{e.message}"
+      render json: { error: 'Failed to create event' }, status: :internal_server_error
+    end
+  end
+
+  def get_event
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      event = Events::Fetcher.new(user_id, event_id: params[:id]).call
+      render json: Events::Serializer.serialize(event), status: :ok
+    rescue Events::EventNotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue EventService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error fetching event: #{e.message}"
+      render json: { error: 'Failed to fetch event' }, status: :internal_server_error
+    end
+  end
+
   private
 
   def build_search_filters

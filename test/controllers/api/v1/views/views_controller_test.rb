@@ -620,4 +620,53 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :internal_server_error
     assert_equal "Failed to browse games", JSON.parse(response.body)["error"]
   end
+
+  # Tests for delete_review endpoint
+
+  test "delete_review returns unauthorized when X-User-ID header is missing" do
+    delete "/api/v1/views/reviews/1"
+
+    assert_response :unauthorized
+    assert_equal "X-User-ID header is required", JSON.parse(response.body)["error"]
+  end
+
+  test "delete_review successfully removes the rating" do
+    user_id = "user123"
+    game_id = 42
+
+    remover = mock('remover')
+    remover.expects(:call).returns(true)
+    GameReviews::Remover.expects(:new).with(user_id, game_id: "42").returns(remover)
+
+    delete "/api/v1/views/reviews/#{game_id}", headers: { "X-User-ID" => user_id }
+
+    assert_response :ok
+    assert_equal "Rating removed", JSON.parse(response.body)["message"]
+  end
+
+  test "delete_review returns 422 on UserService client error" do
+    user_id = "user123"
+
+    remover = mock('remover')
+    remover.expects(:call).raises(UserService::ClientError.new("Forbidden"))
+    GameReviews::Remover.expects(:new).with(user_id, game_id: "42").returns(remover)
+
+    delete "/api/v1/views/reviews/42", headers: { "X-User-ID" => user_id }
+
+    assert_response :unprocessable_entity
+    assert_equal "Forbidden", JSON.parse(response.body)["error"]
+  end
+
+  test "delete_review returns 500 on unexpected error" do
+    user_id = "user123"
+
+    remover = mock('remover')
+    remover.expects(:call).raises(StandardError.new("boom"))
+    GameReviews::Remover.expects(:new).with(user_id, game_id: "42").returns(remover)
+
+    delete "/api/v1/views/reviews/42", headers: { "X-User-ID" => user_id }
+
+    assert_response :internal_server_error
+    assert_equal "Failed to remove rating", JSON.parse(response.body)["error"]
+  end
 end

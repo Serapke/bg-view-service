@@ -19,6 +19,7 @@ Rails.application.routes.draw do
         get 'reviews', to: 'views#user_reviews'
         post 'reviews', to: 'views#review_game'
         patch 'reviews', to: 'views#upsert_review'
+        delete 'reviews/:game_id', to: 'views#delete_review'
         post 'events', to: 'views#create_event'
         get  'events/:id', to: 'views#get_event'
       end

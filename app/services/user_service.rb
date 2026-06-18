@@ -109,6 +109,26 @@ class UserService
     raise e
   end
 
+  def self.delete_review(user_id, review_id:)
+    connection = Faraday.new(url: BASE_URL)
+
+    response = connection.delete("/api/v1/reviews/#{review_id}") do |req|
+      req.headers['X-User-ID'] = user_id
+    end
+
+    if response.success?
+      true
+    elsif response.status < 500
+      message = response.body.is_a?(Hash) ? response.body['error'] : nil
+      raise ClientError, message || "Failed to delete review"
+    else
+      raise StandardError, "Failed to delete review: #{response.status}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    raise e
+  end
+
   def self.create_review(user_id, game_id:, rating:, review_text:)
     connection = Faraday.new(url: BASE_URL) do |conn|
       conn.request :json

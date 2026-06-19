@@ -267,6 +267,21 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def user_events
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      events = Events::ListFetcher.new(user_id).call
+      render json: { events: events.map { |e| Events::Serializer.serialize(e) } }, status: :ok
+    rescue EventService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error listing events: #{e.message}"
+      render json: { error: 'Failed to list events' }, status: :internal_server_error
+    end
+  end
+
   private
 
   def build_search_filters

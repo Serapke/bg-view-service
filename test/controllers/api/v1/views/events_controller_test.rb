@@ -62,4 +62,29 @@ class Api::V1::Views::EventsControllerTest < ActionDispatch::IntegrationTest
     get "/api/v1/views/events/9999", headers: { "X-User-ID" => @user_id }
     assert_response :not_found
   end
+
+  test "user_events returns 401 without X-User-ID" do
+    get "/api/v1/views/events"
+    assert_response :unauthorized
+  end
+
+  test "user_events returns serialized list" do
+    upstream = {
+      "events" => [
+        { "id" => 1, "creatorId" => 42, "title" => "Catan", "participantIds" => [42, 7], "createdAt" => "2026-06-18T00:00:00Z" },
+        { "id" => 2, "creatorId" => 7,  "title" => nil,     "participantIds" => [7, 42], "createdAt" => "2026-06-17T00:00:00Z" }
+      ]
+    }
+    stub_request(:get, "#{@event_base}/api/v1/events")
+      .with(headers: { 'X-User-ID' => @user_id })
+      .to_return(status: 200, body: upstream.to_json, headers: { 'Content-Type' => 'application/json' })
+
+    get "/api/v1/views/events", headers: { "X-User-ID" => @user_id }
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal 2, body["events"].length
+    assert_equal [1, 2], body["events"].map { |e| e["id"] }
+    assert_equal 42, body["events"][0]["creator_id"]
+    assert_equal [42, 7], body["events"][0]["participant_ids"]
+  end
 end

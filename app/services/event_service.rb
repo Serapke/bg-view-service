@@ -58,4 +58,33 @@ class EventService
     Rails.logger.error "EventService error: #{e.message}"
     raise e
   end
+
+  def self.list_events(user_id)
+    connection = Faraday.new(url: BASE_URL)
+
+    response = connection.get("/api/v1/events") do |req|
+      req.headers['X-User-ID'] = user_id
+    end
+
+    if response.success?
+      body = JSON.parse(response.body)
+      body['events'] || []
+    elsif response.status < 500
+      message =
+        begin
+          JSON.parse(response.body)['error']
+        rescue StandardError
+          nil
+        end
+      raise ClientError, message || "Failed to list events"
+    else
+      raise StandardError, "Failed to list events: #{response.status}"
+    end
+  rescue JSON::ParserError => e
+    Rails.logger.error "EventService JSON parsing error: #{e.message}"
+    raise StandardError, "Invalid response format from event service"
+  rescue StandardError => e
+    Rails.logger.error "EventService error: #{e.message}"
+    raise e
+  end
 end

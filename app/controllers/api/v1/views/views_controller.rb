@@ -256,7 +256,7 @@ class Api::V1::Views::ViewsController < ApplicationController
 
     begin
       event = Events::Fetcher.new(user_id, event_id: params[:id]).call
-      render json: Events::Serializer.serialize(event), status: :ok
+      render json: Events::Serializer.serialize_with_recommendation(event), status: :ok
     rescue Events::EventNotFoundError => e
       render json: { error: e.message }, status: :not_found
     rescue EventService::ClientError => e

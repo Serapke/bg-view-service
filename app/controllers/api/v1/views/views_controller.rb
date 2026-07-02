@@ -8,8 +8,9 @@ class Api::V1::Views::ViewsController < ApplicationController
 
     begin
       filters        = build_search_filters
-      enriched_games = GameSearch::Searcher.new(user_id, name: name, filters: filters).call
-      result         = GameSearch::Serializer.serialize_results(enriched_games)
+      searcher       = GameSearch::Searcher.new(user_id, name: name, filters: filters)
+      enriched_games = searcher.call
+      result         = GameSearch::Serializer.serialize_results(enriched_games, importing: searcher.importing?)
       render json: result
     rescue UserService::ClientError => e
       render json: { error: e.message }, status: :unprocessable_entity
@@ -118,7 +119,8 @@ class Api::V1::Views::ViewsController < ApplicationController
         user_id,
         game_id: params[:game_id],
         notes: params[:notes],
-        label_names: params[:label_names] || []
+        label_names: params[:label_names] || [],
+        status: params[:status]
       ).call
 
       serialized_item = UserCollections::Serializer.serialize_item(

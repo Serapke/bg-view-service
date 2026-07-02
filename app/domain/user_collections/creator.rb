@@ -1,10 +1,11 @@
 module UserCollections
   class Creator
-    def initialize(user_id, game_id:, notes: nil, label_names: [])
+    def initialize(user_id, game_id:, notes: nil, label_names: [], status: nil)
       @user_id = user_id
       @game_id = game_id
       @notes = notes
       @label_names = label_names
+      @status = status
     end
 
     def call
@@ -15,7 +16,7 @@ module UserCollections
 
     private
 
-    attr_reader :user_id, :game_id, :notes, :label_names
+    attr_reader :user_id, :game_id, :notes, :label_names, :status
 
     def fetch_and_validate_game!
       game = GameDiscoveryService.get_game_by_id(game_id)
@@ -28,7 +29,8 @@ module UserCollections
         user_id,
         game_id: game_id,
         notes: notes,
-        label_names: label_names
+        label_names: label_names,
+        status: status
       )
     end
   end

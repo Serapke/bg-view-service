@@ -565,6 +565,38 @@ class Api::V1::Views::ViewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], body["recommendations"]
   end
 
+  test "search_games surfaces the importing flag from game discovery" do
+    user_id = "user123"
+
+    GameDiscoveryService.stubs(:search).returns(
+      { board_games: [{ "id" => 1, "name" => "Catan", "rating" => 7.5 }], importing: true }
+    )
+    UserService.stubs(:get_user_collection).returns({ "games" => [] })
+    UserService.stubs(:get_user_reviews).returns([])
+
+    get "/api/v1/views/search", params: { name: "catan" }, headers: { "X-User-ID" => user_id }
+
+    assert_response :success
+    body = JSON.parse(response.body)
+    assert_equal true, body["importing"]
+    assert_equal 1, body["board_games"].size
+  end
+
+  test "search_games reports importing false when discovery has no pending import" do
+    user_id = "user123"
+
+    GameDiscoveryService.stubs(:search).returns(
+      { board_games: [{ "id" => 1, "name" => "Catan", "rating" => 7.5 }], importing: false }
+    )
+    UserService.stubs(:get_user_collection).returns({ "games" => [] })
+    UserService.stubs(:get_user_reviews).returns([])
+
+    get "/api/v1/views/search", params: { name: "catan" }, headers: { "X-User-ID" => user_id }
+
+    assert_response :success
+    assert_equal false, JSON.parse(response.body)["importing"]
+  end
+
   test "browse returns unauthorized when X-User-ID header is missing" do
     get api_v1_views_browse_path
 

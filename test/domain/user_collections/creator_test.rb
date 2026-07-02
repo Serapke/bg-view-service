@@ -26,7 +26,7 @@ class UserCollections::CreatorTest < ActiveSupport::TestCase
 
     GameDiscoveryService.stubs(:get_game_by_id).with(game_id).returns(game)
     UserService.stubs(:add_game_to_collection)
-      .with(user_id, game_id: game_id, notes: notes, label_names: label_names)
+      .with(user_id, game_id: game_id, notes: notes, label_names: label_names, status: nil)
       .returns(collection_item)
 
     creator = UserCollections::Creator.new(user_id, game_id: game_id, notes: notes, label_names: label_names)
@@ -56,7 +56,7 @@ class UserCollections::CreatorTest < ActiveSupport::TestCase
 
     GameDiscoveryService.stubs(:get_game_by_id).with(game_id).returns(game)
     UserService.stubs(:add_game_to_collection)
-      .with(user_id, game_id: game_id, notes: nil, label_names: [])
+      .with(user_id, game_id: game_id, notes: nil, label_names: [], status: nil)
       .returns(collection_item)
 
     creator = UserCollections::Creator.new(user_id, game_id: game_id)
@@ -87,7 +87,7 @@ class UserCollections::CreatorTest < ActiveSupport::TestCase
 
     GameDiscoveryService.stubs(:get_game_by_id).with(game_id).returns(game)
     UserService.stubs(:add_game_to_collection)
-      .with(user_id, game_id: game_id, notes: notes, label_names: [])
+      .with(user_id, game_id: game_id, notes: notes, label_names: [], status: nil)
       .returns(collection_item)
 
     creator = UserCollections::Creator.new(user_id, game_id: game_id, notes: notes)
@@ -184,7 +184,7 @@ class UserCollections::CreatorTest < ActiveSupport::TestCase
 
     GameDiscoveryService.stubs(:get_game_by_id).with(game_id).returns(game)
     UserService.stubs(:add_game_to_collection)
-      .with(user_id, game_id: game_id, notes: nil, label_names: label_names)
+      .with(user_id, game_id: game_id, notes: nil, label_names: label_names, status: nil)
       .returns(collection_item)
 
     creator = UserCollections::Creator.new(user_id, game_id: game_id, label_names: label_names)

@@ -22,7 +22,7 @@ class UserService
     raise e
   end
 
-  def self.add_game_to_collection(user_id, game_id:, notes: nil, label_names: [])
+  def self.add_game_to_collection(user_id, game_id:, notes: nil, label_names: [], status: nil)
     connection = Faraday.new(url: BASE_URL) do |conn|
       conn.request :json
       conn.response :json
@@ -34,7 +34,8 @@ class UserService
       req.body = {
         gameId: game_id,
         notes: notes,
-        labelNames: label_names
+        labelNames: label_names,
+        status: status
       }
     end
 

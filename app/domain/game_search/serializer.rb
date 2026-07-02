@@ -1,8 +1,8 @@
 module GameSearch
   class Serializer
-    def self.serialize_results(enriched_games)
+    def self.serialize_results(enriched_games, importing: false)
       results = enriched_games.map { |item| serialize_game(item[:game], item[:in_collection], item[:user_rating]) }
-      { board_games: results, total: results.size }
+      { board_games: results, total: results.size, importing: importing }
     end
 
     def self.serialize_paginated(enriched_games, page:, per_page:, total:, total_pages:)

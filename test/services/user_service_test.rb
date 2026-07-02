@@ -119,7 +119,8 @@ class UserServiceTest < ActiveSupport::TestCase
     request_body = {
       gameId: game_id,
       notes: notes,
-      labelNames: label_names
+      labelNames: label_names,
+      status: nil
     }
 
     response_body = {
@@ -158,7 +159,8 @@ class UserServiceTest < ActiveSupport::TestCase
     request_body = {
       gameId: game_id,
       notes: nil,
-      labelNames: []
+      labelNames: [],
+      status: nil
     }
 
     response_body = {
@@ -195,7 +197,8 @@ class UserServiceTest < ActiveSupport::TestCase
     request_body = {
       gameId: game_id,
       notes: notes,
-      labelNames: []
+      labelNames: [],
+      status: nil
     }
 
     response_body = {
@@ -232,7 +235,8 @@ class UserServiceTest < ActiveSupport::TestCase
     request_body = {
       gameId: game_id,
       notes: nil,
-      labelNames: label_names
+      labelNames: label_names,
+      status: nil
     }
 
     response_body = {

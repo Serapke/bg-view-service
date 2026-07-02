@@ -38,7 +38,8 @@ module UserCollections
         notes: collection_item['notes'],
         labels: collection_item['labels'] || [],
         user_rating: collection_item['userRating'],
-        modified_at: collection_item['modifiedAt']
+        modified_at: collection_item['modifiedAt'],
+        status: collection_item['status'] || 'OWN'
       }
     end
   end

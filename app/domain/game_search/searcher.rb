@@ -1,17 +1,25 @@
 module GameSearch
   class Searcher
+    # True when game-discovery is still importing more matches in the background.
+    attr_reader :importing
+
     def initialize(user_id, name:, filters: {})
-      @user_id = user_id
-      @name    = name
-      @filters = filters
+      @user_id   = user_id
+      @name      = name
+      @filters   = filters
+      @importing = false
     end
 
     def call
-      games            = GameDiscoveryService.search(name, filters: filters)
+      search_result    = GameDiscoveryService.search(name, filters: filters)
+      @importing       = search_result[:importing]
+      games            = search_result[:board_games]
       collection_items = fetch_collection_items
       user_ratings     = fetch_user_ratings
       enrich(games, collection_items, user_ratings)
     end
+
+    alias importing? importing
 
     private
 

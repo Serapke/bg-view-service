@@ -30,7 +30,8 @@ class GameDiscoveryService
 
     response = connection.get("/api/v1/board_games/search", params)
     if response.success?
-      JSON.parse(response.body).dig('board_games') || []
+      body = JSON.parse(response.body)
+      { board_games: body['board_games'] || [], importing: body['importing'] || false }
     else
       raise StandardError, "Search failed: #{response.status} - #{response.reason_phrase}"
     end

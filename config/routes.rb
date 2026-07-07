@@ -11,6 +11,7 @@ Rails.application.routes.draw do
         get 'search', to: 'views#search_games'
         get 'trending', to: 'views#trending'
         get 'recommendations', to: 'views#recommendations'
+        post 'group_picks', to: 'views#group_picks'
         get 'browse', to: 'views#browse'
         get 'games/:id', to: 'views#game_detail'
         get 'collections', to: 'views#user_collections'

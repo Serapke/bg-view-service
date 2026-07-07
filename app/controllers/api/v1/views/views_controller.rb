@@ -50,6 +50,21 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def group_picks
+    picks = GroupPicks::Fetcher.new(
+      host_user_ids:    params[:host_user_ids],
+      extra_game_ids:   params[:extra_game_ids],
+      player_user_ids:  params[:player_user_ids],
+      player_count:     params[:player_count],
+      max_playing_time: params[:max_playing_time],
+      max_difficulty:   params[:max_difficulty]
+    ).call
+    render json: GroupPicks::Serializer.serialize(picks)
+  rescue StandardError => e
+    Rails.logger.error "Error fetching group picks: #{e.message}"
+    render json: { error: 'Failed to fetch group picks' }, status: :internal_server_error
+  end
+
   def browse
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?

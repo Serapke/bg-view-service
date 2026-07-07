@@ -9,6 +9,27 @@ class RecommenderService
     fetch_ids("/api/v1/recommendations/users/#{user_id}")
   end
 
+  def self.get_group_picks(payload)
+    connection = Faraday.new(url: BASE_URL) do |conn|
+      conn.request :json
+      conn.response :json
+    end
+
+    response = connection.post('/api/v1/group_picks') do |req|
+      req.headers['Content-Type'] = 'application/json'
+      req.body = payload
+    end
+
+    if response.success?
+      response.body['ranked_games'] || []
+    else
+      raise StandardError, "Failed to fetch group picks: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "RecommenderService.get_group_picks error: #{e.message}"
+    raise e
+  end
+
   def self.fetch_ids(path)
     connection = Faraday.new(url: BASE_URL)
     response = connection.get(path)

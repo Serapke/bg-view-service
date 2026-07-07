@@ -4,7 +4,7 @@ class EventService
   class ClientError < StandardError; end
   class NotFoundError < StandardError; end
 
-  def self.create_event(user_id, user_ids:, title: nil)
+  def self.create_event(user_id, user_ids:, title: nil, scheduled_date: nil)
     connection = Faraday.new(url: BASE_URL) do |conn|
       conn.request :json
       conn.response :json
@@ -13,7 +13,7 @@ class EventService
     response = connection.post("/api/v1/events") do |req|
       req.headers['X-User-ID'] = user_id
       req.headers['Content-Type'] = 'application/json'
-      req.body = { userIds: user_ids, title: title }
+      req.body = { userIds: user_ids, title: title, scheduledDate: scheduled_date }
     end
 
     if response.success?

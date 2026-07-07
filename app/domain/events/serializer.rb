@@ -5,6 +5,7 @@ module Events
         id: event['id'],
         creator_id: event['creatorId'],
         title: event['title'],
+        scheduled_date: event['scheduledDate'],
         participant_ids: event['participantIds'],
         created_at: event['createdAt']
       }

@@ -257,7 +257,7 @@ class Api::V1::Views::ViewsController < ApplicationController
     return render json: { error: 'userIds must be an array' }, status: :bad_request unless user_ids.is_a?(Array)
 
     begin
-      event = Events::Creator.new(user_id, user_ids: user_ids, title: params[:title]).call
+      event = Events::Creator.new(user_id, user_ids: user_ids, title: params[:title], scheduled_date: params[:scheduledDate]).call
       render json: Events::Serializer.serialize(event), status: :created
     rescue EventService::ClientError => e
       render json: { error: e.message }, status: :unprocessable_entity

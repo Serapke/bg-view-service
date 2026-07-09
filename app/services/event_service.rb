@@ -59,6 +59,20 @@ class EventService
     raise e
   end
 
+  def self.delete_event(user_id, event_id:)
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.delete("/api/v1/events/#{event_id}") do |req|
+      req.headers['X-User-ID'] = user_id
+    end
+    return if response.status == 204
+    raise NotFoundError, "Event not found" if response.status == 404
+    raise ClientError, "Failed to delete event" if response.status < 500
+    raise StandardError, "Failed to delete event: #{response.status}"
+  rescue StandardError => e
+    Rails.logger.error "EventService error: #{e.message}"
+    raise e
+  end
+
   def self.patch_event(user_id, event_id:, play_id:)
     connection = Faraday.new(url: BASE_URL) do |conn|
       conn.request :json

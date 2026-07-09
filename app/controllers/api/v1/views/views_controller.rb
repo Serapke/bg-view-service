@@ -269,6 +269,23 @@ class Api::V1::Views::ViewsController < ApplicationController
     render json: { error: 'Failed to fetch plays' }, status: :internal_server_error
   end
 
+  def delete_event
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    begin
+      EventService.delete_event(user_id, event_id: params[:id])
+      head :no_content
+    rescue EventService::NotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue EventService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error deleting event: #{e.message}"
+      render json: { error: 'Failed to delete event' }, status: :internal_server_error
+    end
+  end
+
   def update_event
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?

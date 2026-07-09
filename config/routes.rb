@@ -25,7 +25,8 @@ Rails.application.routes.draw do
         get   'events', to: 'views#user_events'
         get   'events/:id', to: 'views#get_event'
         patch 'events/:id', to: 'views#update_event'
-        get   'events/:id/plays', to: 'views#event_plays'
+        get    'events/:id/plays', to: 'views#event_plays'
+        delete 'events/:id', to: 'views#delete_event'
       end
     end
   end

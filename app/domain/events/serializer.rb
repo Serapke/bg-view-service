@@ -7,6 +7,7 @@ module Events
         title: event['title'],
         scheduled_date: event['scheduledDate'],
         participant_ids: event['participantIds'],
+        game_play_ids: event['gamePlayIds'] || [],
         created_at: event['createdAt']
       }
     end

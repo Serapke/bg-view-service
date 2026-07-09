@@ -248,6 +248,47 @@ class Api::V1::Views::ViewsController < ApplicationController
     end
   end
 
+  def event_plays
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    play_ids = params[:ids].to_s.split(',').map(&:to_i).reject(&:zero?)
+    plays = UserService.fetch_plays_by_ids(play_ids)
+
+    game_ids = plays.map { |p| p['gameId'] }.uniq.compact
+    games_by_id = GameDiscoveryService.get_games_by_ids(game_ids)
+                                      .each_with_object({}) { |g, h| h[g['id']] = g }
+
+    enriched = plays.map do |p|
+      game = games_by_id[p['gameId']]
+      p.merge('gameName' => game&.dig('name'), 'gameThumbnailUrl' => game&.dig('thumbnail_url'))
+    end
+    render json: { plays: enriched }, status: :ok
+  rescue StandardError => e
+    Rails.logger.error "Error fetching event plays: #{e.message}"
+    render json: { error: 'Failed to fetch plays' }, status: :internal_server_error
+  end
+
+  def update_event
+    user_id = request.headers['X-User-ID']
+    return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
+
+    play_id = params[:playId]
+    return render json: { error: 'playId is required' }, status: :bad_request if play_id.blank?
+
+    begin
+      event = EventService.patch_event(user_id, event_id: params[:id], play_id: play_id)
+      render json: Events::Serializer.serialize(event), status: :ok
+    rescue Events::EventNotFoundError, EventService::NotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue EventService::ClientError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue StandardError => e
+      Rails.logger.error "Error updating event: #{e.message}"
+      render json: { error: 'Failed to update event' }, status: :internal_server_error
+    end
+  end
+
   def create_event
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?

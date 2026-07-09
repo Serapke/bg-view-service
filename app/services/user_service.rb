@@ -158,4 +158,23 @@ class UserService
     Rails.logger.error "UserService error: #{e.message}"
     raise e
   end
+
+  def self.fetch_plays_by_ids(ids)
+    return [] if ids.empty?
+
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.get("/api/v1/plays/batch") do |req|
+      req.params['ids'] = ids.join(',')
+    end
+
+    if response.success?
+      JSON.parse(response.body)
+    else
+      Rails.logger.error "UserService fetch_plays_by_ids failed: #{response.status}"
+      []
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    []
+  end
 end

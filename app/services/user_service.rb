@@ -177,4 +177,24 @@ class UserService
     Rails.logger.error "UserService error: #{e.message}"
     []
   end
+
+  def self.get_plays_counts_this_year(user_id, game_ids)
+    return {} if game_ids.empty?
+
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.get("/api/v1/plays/counts-this-year") do |req|
+      req.headers['X-User-ID'] = user_id
+      req.params['gameIds'] = game_ids.join(',')
+    end
+
+    if response.success?
+      JSON.parse(response.body)
+    else
+      Rails.logger.error "UserService get_plays_counts_this_year failed: #{response.status}"
+      {}
+    end
+  rescue StandardError => e
+    Rails.logger.error "UserService error: #{e.message}"
+    {}
+  end
 end

@@ -29,7 +29,7 @@ module Events
 
     def self.serialize_games(items)
       Array(items).map do |item|
-        GameSearch::Serializer.serialize_game(item['game'], item['in_collection'], item['user_rating'])
+        GameSearch::Serializer.serialize_game(item['game'], item['in_collection'], item['user_rating'], item['plays_this_year'] || 0)
       end
     end
   end

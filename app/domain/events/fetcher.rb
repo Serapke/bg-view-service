@@ -28,12 +28,14 @@ module Events
 
       viewer_collection = viewer_collection_ids
       viewer_ratings    = viewer_ratings_by_game_id
+      owned_game_ids    = owned_games.map { |g| g['id'] }
+      plays_counts      = UserService.get_plays_counts_this_year(@user_id, owned_game_ids)
 
       event.merge(
         'recommendation' => {
           'status' => rec['status'],
           'error'  => rec['error'],
-          'ownedGames'      => enrich_for_viewer(owned_games, viewer_collection, viewer_ratings),
+          'ownedGames'      => enrich_for_viewer(owned_games, viewer_collection, viewer_ratings, plays_counts),
           'acquirableGames' => enrich_for_viewer(acquirable_games, viewer_collection, viewer_ratings)
         }
       )
@@ -47,12 +49,13 @@ module Events
       ids.map { |id| by_id[id] }.compact
     end
 
-    def enrich_for_viewer(games, viewer_collection, viewer_ratings)
+    def enrich_for_viewer(games, viewer_collection, viewer_ratings, plays_counts = {})
       games.map do |g|
         {
           'game' => g,
           'in_collection' => viewer_collection.include?(g['id']),
-          'user_rating' => viewer_ratings[g['id']]
+          'user_rating' => viewer_ratings[g['id']],
+          'plays_this_year' => plays_counts[g['id'].to_s]&.to_i || 0
         }
       end
     end

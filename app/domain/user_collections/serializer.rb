@@ -4,19 +4,19 @@ module UserCollections
       new.serialize_collection(user_id, enriched_items)
     end
 
-    def self.serialize_item(collection_item, game)
-      new.serialize_item(collection_item, game)
+    def self.serialize_item(collection_item, game, plays_this_year = 0)
+      new.serialize_item(collection_item, game, plays_this_year)
     end
 
     def serialize_collection(user_id, enriched_items)
       {
         user_id: user_id,
-        collection: enriched_items.map { |item| serialize_item(item[:collection_item], item[:game]) },
+        collection: enriched_items.map { |item| serialize_item(item[:collection_item], item[:game], item[:plays_this_year]) },
         total_games: enriched_items.size
       }
     end
 
-    def serialize_item(collection_item, game)
+    def serialize_item(collection_item, game, plays_this_year = 0)
       {
         id: game['id'],
         name: game['name'],
@@ -39,7 +39,8 @@ module UserCollections
         labels: collection_item['labels'] || [],
         user_rating: collection_item['userRating'],
         modified_at: collection_item['modifiedAt'],
-        status: collection_item['status'] || 'OWN'
+        status: collection_item['status'] || 'OWN',
+        plays_this_year: plays_this_year
       }
     end
   end

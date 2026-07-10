@@ -14,7 +14,8 @@ module UserCollections
       filtered_collection = filter_by_user_rating(user_collection)
       game_ids = extract_game_ids(filtered_collection)
       games = fetch_games(game_ids)
-      enrich_collection(filtered_collection, games)
+      plays_counts = UserService.get_plays_counts_this_year(user_id, game_ids)
+      enrich_collection(filtered_collection, games, plays_counts)
     end
 
     private
@@ -57,7 +58,7 @@ module UserCollections
       filters
     end
 
-    def enrich_collection(user_collection, games)
+    def enrich_collection(user_collection, games, plays_counts)
       collection_items = user_collection.dig('games') || []
 
       collection_items.map do |collection_item|
@@ -70,7 +71,8 @@ module UserCollections
           next
         end
 
-        { collection_item: collection_item, game: game }
+        plays_this_year = plays_counts[collection_item['gameId'].to_s]&.to_i || 0
+        { collection_item: collection_item, game: game, plays_this_year: plays_this_year }
       end.compact
     end
 

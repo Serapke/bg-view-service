@@ -10,7 +10,7 @@ module GameSearch
       { board_games: results, page: page, per_page: per_page, total: total, total_pages: total_pages }
     end
 
-    def self.serialize_game(game, in_collection, user_rating)
+    def self.serialize_game(game, in_collection, user_rating, plays_this_year = 0)
       {
         id:               game['id'],
         name:             game['name'],
@@ -26,7 +26,8 @@ module GameSearch
         image_url:        game['image_url'],
         thumbnail_url:    game['thumbnail_url'],
         in_collection:    in_collection,
-        user_rating:      user_rating
+        user_rating:      user_rating,
+        plays_this_year:  plays_this_year
       }
     end
   end

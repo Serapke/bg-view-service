@@ -43,9 +43,11 @@ class GameDiscoveryService
     raise e
   end
 
-  def self.browse(page:, per_page:, sort:)
+  def self.browse(page:, per_page:, sort:, game_types: nil)
     connection = Faraday.new(url: BASE_URL)
-    response = connection.get("/api/v1/board_games", { page: page, per_page: per_page, sort: sort }.compact)
+    params = { page: page, per_page: per_page, sort: sort }.compact
+    params[:game_types] = Array(game_types).join(',') if game_types.present?
+    response = connection.get("/api/v1/board_games", params)
 
     if response.success?
       JSON.parse(response.body)

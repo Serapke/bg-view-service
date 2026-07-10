@@ -74,7 +74,8 @@ class Api::V1::Views::ViewsController < ApplicationController
         user_id,
         page: params[:page],
         per_page: params[:per_page],
-        sort: params[:sort]
+        sort: params[:sort],
+        game_types: params[:game_types]
       ).call
       render json: GameSearch::Serializer.serialize_paginated(
         result[:enriched_games],

@@ -1,14 +1,15 @@
 module Browse
   class Fetcher
-    def initialize(user_id, page:, per_page:, sort:)
+    def initialize(user_id, page:, per_page:, sort:, game_types: nil)
       @user_id = user_id
       @page = page
       @per_page = per_page
       @sort = sort
+      @game_types = game_types
     end
 
     def call
-      response = GameDiscoveryService.browse(page: @page, per_page: @per_page, sort: @sort)
+      response = GameDiscoveryService.browse(page: @page, per_page: @per_page, sort: @sort, game_types: @game_types)
       games = response['board_games'] || []
 
       collection_items = fetch_collection_items

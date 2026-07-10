@@ -72,10 +72,13 @@ class Api::V1::Views::ViewsController < ApplicationController
     begin
       result = Browse::Fetcher.new(
         user_id,
-        page: params[:page],
-        per_page: params[:per_page],
-        sort: params[:sort],
-        game_types: params[:game_types]
+        page:             params[:page],
+        per_page:         params[:per_page],
+        sort:             params[:sort],
+        game_types:       params[:game_types],
+        player_count:     params[:player_count],
+        max_playing_time: params[:max_playing_time],
+        min_rating:       params[:min_rating]
       ).call
       render json: GameSearch::Serializer.serialize_paginated(
         result[:enriched_games],

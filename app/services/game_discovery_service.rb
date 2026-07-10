@@ -43,10 +43,13 @@ class GameDiscoveryService
     raise e
   end
 
-  def self.browse(page:, per_page:, sort:, game_types: nil)
+  def self.browse(page:, per_page:, sort:, game_types: nil, player_count: nil, max_playing_time: nil, min_rating: nil)
     connection = Faraday.new(url: BASE_URL)
     params = { page: page, per_page: per_page, sort: sort }.compact
-    params[:game_types] = Array(game_types).join(',') if game_types.present?
+    params[:game_types]       = Array(game_types).join(',') if game_types.present?
+    params[:player_count]     = player_count                if player_count.present?
+    params[:max_playing_time] = max_playing_time            if max_playing_time.present?
+    params[:min_rating]       = min_rating                  if min_rating.present?
     response = connection.get("/api/v1/board_games", params)
 
     if response.success?

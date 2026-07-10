@@ -294,11 +294,18 @@ class Api::V1::Views::ViewsController < ApplicationController
     user_id = request.headers['X-User-ID']
     return render json: { error: 'X-User-ID header is required' }, status: :unauthorized if user_id.blank?
 
-    play_id = params[:playId]
-    return render json: { error: 'playId is required' }, status: :bad_request if play_id.blank?
-
     begin
-      event = EventService.patch_event(user_id, event_id: params[:id], play_id: play_id)
+      if params.key?(:playId)
+        play_id = params[:playId]
+        return render json: { error: 'playId is required' }, status: :bad_request if play_id.blank?
+        event = EventService.patch_event(user_id, event_id: params[:id], play_id: play_id)
+      else
+        kwargs = {}
+        kwargs[:title] = params[:title] if params.key?(:title)
+        kwargs[:scheduled_date] = params[:scheduledDate] if params.key?(:scheduledDate)
+        kwargs[:user_ids] = params[:userIds] if params.key?(:userIds)
+        event = Events::Updater.new(user_id, event_id: params[:id], **kwargs).call
+      end
       render json: Events::Serializer.serialize(event), status: :ok
     rescue Events::EventNotFoundError, EventService::NotFoundError => e
       render json: { error: e.message }, status: :not_found

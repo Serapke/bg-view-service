@@ -100,6 +100,37 @@ class EventService
     raise e
   end
 
+  def self.patch_event_fields(user_id, event_id:, title: :unset, scheduled_date: :unset, user_ids: :unset)
+    body = {}
+    body[:title] = title unless title == :unset
+    body[:scheduledDate] = scheduled_date unless scheduled_date == :unset
+    body[:userIds] = user_ids unless user_ids == :unset
+
+    connection = Faraday.new(url: BASE_URL) do |conn|
+      conn.request :json
+      conn.response :json
+    end
+
+    response = connection.patch("/api/v1/events/#{event_id}") do |req|
+      req.headers['X-User-ID'] = user_id
+      req.body = body
+    end
+
+    if response.success?
+      response.body
+    elsif response.status == 404
+      raise NotFoundError, "Event with ID #{event_id} not found"
+    elsif response.status < 500
+      message = response.body.is_a?(Hash) ? response.body['error'] : nil
+      raise ClientError, message || "Failed to update event"
+    else
+      raise StandardError, "Failed to update event: #{response.status}"
+    end
+  rescue StandardError => e
+    Rails.logger.error "EventService error: #{e.message}"
+    raise e
+  end
+
   def self.list_events(user_id)
     connection = Faraday.new(url: BASE_URL)
 

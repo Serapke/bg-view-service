@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       namespace :views do
+        get 'game_categories', to: 'views#game_categories'
         get 'search', to: 'views#search_games'
         get 'trending', to: 'views#trending'
         get 'recommendations', to: 'views#recommendations'

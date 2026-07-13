@@ -75,7 +75,8 @@ class Api::V1::Views::ViewsController < ApplicationController
         page:             params[:page],
         per_page:         params[:per_page],
         sort:             params[:sort],
-        game_types:       params[:game_types],
+        game_types:       params[:game_types]&.split(','),
+        game_categories:  params[:game_categories]&.split(','),
         player_count:     params[:player_count],
         max_playing_time: params[:max_playing_time],
         min_rating:       params[:min_rating]
@@ -109,6 +110,16 @@ class Api::V1::Views::ViewsController < ApplicationController
     rescue StandardError => e
       Rails.logger.error "Error fetching game detail: #{e.message}"
       render json: { error: 'Failed to fetch game detail' }, status: :internal_server_error
+    end
+  end
+
+  def game_categories
+    begin
+      categories = GameDiscoveryService.game_categories
+      render json: { game_categories: categories }
+    rescue StandardError => e
+      Rails.logger.error "Error fetching game categories: #{e.message}"
+      render json: { error: 'Failed to fetch game categories' }, status: :internal_server_error
     end
   end
 
@@ -375,6 +386,7 @@ class Api::V1::Views::ViewsController < ApplicationController
     filters[:player_count]     = params[:player_count]     if params[:player_count].present?
     filters[:max_playing_time] = params[:max_playing_time] if params[:max_playing_time].present?
     filters[:game_types]       = params[:game_types]       if params[:game_types].present?
+    filters[:game_categories]  = params[:game_categories]  if params[:game_categories].present?
     filters[:min_rating]       = params[:min_rating]       if params[:min_rating].present?
     filters
   end

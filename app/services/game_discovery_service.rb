@@ -26,6 +26,7 @@ class GameDiscoveryService
     params[:player_count]     = filters[:player_count]                        if filters[:player_count]
     params[:max_playing_time] = filters[:max_playing_time]                    if filters[:max_playing_time]
     params[:game_types]       = Array(filters[:game_types]).join(',')         if filters[:game_types]
+    params[:game_categories]  = Array(filters[:game_categories]).join(',')    if filters[:game_categories]
     params[:min_rating]       = filters[:min_rating]                          if filters[:min_rating]
 
     response = connection.get("/api/v1/board_games/search", params)
@@ -43,13 +44,14 @@ class GameDiscoveryService
     raise e
   end
 
-  def self.browse(page:, per_page:, sort:, game_types: nil, player_count: nil, max_playing_time: nil, min_rating: nil)
+  def self.browse(page:, per_page:, sort:, game_types: nil, game_categories: nil, player_count: nil, max_playing_time: nil, min_rating: nil)
     connection = Faraday.new(url: BASE_URL)
     params = { page: page, per_page: per_page, sort: sort }.compact
-    params[:game_types]       = Array(game_types).join(',') if game_types.present?
-    params[:player_count]     = player_count                if player_count.present?
-    params[:max_playing_time] = max_playing_time            if max_playing_time.present?
-    params[:min_rating]       = min_rating                  if min_rating.present?
+    params[:game_types]       = Array(game_types).join(',')      if game_types.present?
+    params[:game_categories]  = Array(game_categories).join(',') if game_categories.present?
+    params[:player_count]     = player_count                     if player_count.present?
+    params[:max_playing_time] = max_playing_time                 if max_playing_time.present?
+    params[:min_rating]       = min_rating                       if min_rating.present?
     response = connection.get("/api/v1/board_games", params)
 
     if response.success?
@@ -87,10 +89,11 @@ class GameDiscoveryService
 
     connection = Faraday.new(url: BASE_URL)
     params = { ids: game_ids.join(',') }
-    params[:player_count] = filters[:player_count] if filters[:player_count]
-    params[:max_playing_time] = filters[:max_playing_time] if filters[:max_playing_time]
-    params[:game_types] = Array(filters[:game_types]).join(',') if filters[:game_types]
-    params[:min_rating] = filters[:min_rating] if filters[:min_rating]
+    params[:player_count]    = filters[:player_count]                        if filters[:player_count]
+    params[:max_playing_time] = filters[:max_playing_time]                   if filters[:max_playing_time]
+    params[:game_types]      = Array(filters[:game_types]).join(',')         if filters[:game_types]
+    params[:game_categories] = Array(filters[:game_categories]).join(',')    if filters[:game_categories]
+    params[:min_rating]      = filters[:min_rating]                          if filters[:min_rating]
 
     response = connection.get("/api/v1/board_games", params)
 
@@ -98,6 +101,22 @@ class GameDiscoveryService
       JSON.parse(response.body).dig('board_games')
     else
       raise StandardError, "Failed to fetch games: #{response.status} - #{response.reason_phrase}"
+    end
+  rescue JSON::ParserError => e
+    Rails.logger.error "GameDiscoveryService JSON parsing error: #{e.message}"
+    raise StandardError, "Invalid response format from game discovery service"
+  rescue StandardError => e
+    Rails.logger.error "GameDiscoveryService error: #{e.message}"
+    raise e
+  end
+
+  def self.game_categories
+    connection = Faraday.new(url: BASE_URL)
+    response = connection.get("/api/v1/game_categories")
+    if response.success?
+      JSON.parse(response.body)['game_categories'] || []
+    else
+      raise StandardError, "Failed to fetch game categories: #{response.status} - #{response.reason_phrase}"
     end
   rescue JSON::ParserError => e
     Rails.logger.error "GameDiscoveryService JSON parsing error: #{e.message}"

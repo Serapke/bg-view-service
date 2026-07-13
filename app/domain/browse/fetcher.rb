@@ -1,11 +1,12 @@
 module Browse
   class Fetcher
-    def initialize(user_id, page:, per_page:, sort:, game_types: nil, player_count: nil, max_playing_time: nil, min_rating: nil)
+    def initialize(user_id, page:, per_page:, sort:, game_types: nil, game_categories: nil, player_count: nil, max_playing_time: nil, min_rating: nil)
       @user_id = user_id
       @page = page
       @per_page = per_page
       @sort = sort
       @game_types = game_types
+      @game_categories = game_categories
       @player_count = player_count
       @max_playing_time = max_playing_time
       @min_rating = min_rating
@@ -14,8 +15,9 @@ module Browse
     def call
       response = GameDiscoveryService.browse(
         page: @page, per_page: @per_page, sort: @sort,
-        game_types: @game_types, player_count: @player_count,
-        max_playing_time: @max_playing_time, min_rating: @min_rating
+        game_types: @game_types, game_categories: @game_categories,
+        player_count: @player_count, max_playing_time: @max_playing_time,
+        min_rating: @min_rating
       )
       games = response['board_games'] || []
 

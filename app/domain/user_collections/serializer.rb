@@ -39,7 +39,7 @@ module UserCollections
         labels: collection_item['labels'] || [],
         user_rating: collection_item['userRating'],
         modified_at: collection_item['modifiedAt'],
-        status: collection_item['status'] || 'OWN',
+        status: collection_item['status'] || 'OWNED',
         plays_this_year: plays_this_year
       }
     end

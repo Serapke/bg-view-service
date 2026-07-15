@@ -12,8 +12,8 @@ class GroupPicks::FetcherTest < ActiveSupport::TestCase
     ])
     UserService.stubs(:get_user_collection).with("1").returns({
       "games" => [
-        { "gameId" => 10, "status" => "OWN" },
-        { "gameId" => 30, "status" => "WANT" }
+        { "gameId" => 10, "status" => "OWNED" },
+        { "gameId" => 30, "status" => "WANT_TO_OWN" }
       ]
     })
 
@@ -50,7 +50,7 @@ class GroupPicks::FetcherTest < ActiveSupport::TestCase
       { "id" => 30, "name" => "Citadels" }
     ])
     UserService.stubs(:get_user_collection).with("1").returns({
-      "games" => [{ "gameId" => 30, "status" => "WANT" }]
+      "games" => [{ "gameId" => 30, "status" => "WANT_TO_OWN" }]
     })
 
     picks = GroupPicks::Fetcher.new(

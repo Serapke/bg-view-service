@@ -51,7 +51,7 @@ module GroupPicks
       host_user_ids.each do |uid|
         collection = UserService.get_user_collection(uid.to_s) rescue { 'games' => [] }
         (collection['games'] || []).each do |g|
-          next unless g['status'] == 'OWN'
+          next unless g['status'] == 'OWNED'
 
           gid = g['gameId']&.to_i
           owners[gid] << uid if gid

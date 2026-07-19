@@ -13,6 +13,7 @@ services:
       - GAME_DISCOVERY_SERVICE_URL=http://host.docker.internal:3002
       - RECOMMENDER_SERVICE_URL=http://host.docker.internal:3004
       - EVENT_SERVICE_URL=http://host.docker.internal:3005
+      - FRONTEND_TAILNET_ORIGIN=http://mantass-macbook-pro.tail3033c9.ts.net:5173
     ports:
       - "3003:3003"
       - "1235:1234"  # Debug port for rdbg

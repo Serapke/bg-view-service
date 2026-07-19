@@ -37,4 +37,8 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Allow access over the Tailscale tailnet (see REMOTE_ACCESS.md).
+  # Matches any host under the *.ts.net tailnet domain.
+  config.hosts << /.*\.ts\.net/
 end
